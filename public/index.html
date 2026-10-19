@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desafio do Engajamento · ASFIT</title>
+<meta name="description" content="Posta todo dia marcando a ASFIT, manda o link e sobe no ranking. As 11 que mais engajarem até o 11/11 ganham prêmios.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F7F3E8">
+<meta name="color-scheme" content="light">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Desafio do Engajamento · ASFIT">
+<meta property="og:description" content="Posta todo dia marcando a ASFIT, manda o link e sobe no ranking. As 11 que mais engajarem até o 11/11 ganham prêmios.">
+<meta property="og:url" content="https://desafio-asfit.pages.dev/">
+<!-- Arte da prévia do link: fonte em fonte/previa-link.html. Ao trocar a arte, trocar também o nome do arquivo (o WhatsApp guarda a prévia antiga) -->
+<meta property="og:image" content="https://desafio-asfit.pages.dev/img/compartilhar-desafio.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Desafio do Engajamento ASFIT: posta todo dia e concorre a prêmios até 11/11">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preload" href="fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="img/agatha-por-do-sol.webp" imagesrcset="img/agatha-por-do-sol-640.webp 640w, img/agatha-por-do-sol.webp 853w" imagesizes="(min-width: 900px) 420px, 200px" fetchpriority="high">
+<style>
+  /* Manual da marca (Carol Guerra, 06/10/2026): Mundial Regular nos títulos e Mundial Thin no texto corrido.
+     A Mundial que temos é demo e sem acento, então vai a Figtree: 500 tem o peso da Mundial Regular e 300 faz o papel da Thin. */
+  @font-face {
+    font-family: "Figtree";
+    src: url(fonts/figtree-latin.woff2) format("woff2");
+    font-weight: 300 900;
+    font-style: normal;
+    font-display: block;
+  }
+
+  :root {
+    /* Paleta do manual da Asfit, a mesma da captação e da página da live */
+    --creme: #F7F3E8;
+    --papel: #FFFCF5;
+    --vinho: #873A4A;
+    --vinho-escuro: #6E2E3C;
+    --amarelo: #FEE179;
+    --terracota: #CA6839;
+    --marrom: #623B1E;
+    --marrom-apoio: #76543A;
+    --creme-apoio: #ECE0D8;
+    --linha: rgba(98, 59, 30, .16);
+    --erro: #A63D27;
+    --verde: #3F6B3A;
+    --fonte: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    /* Cantos: pílula no que se toca (botão, selo), 14px nos campos, 20px nas caixas, 28px em foto */
+    --raio-campo: 14px;
+    --raio-caixa: 20px;
+    --raio-midia: 28px;
+    --mola: cubic-bezier(.16, 1, .3, 1);
+    --largura: 1120px;
+    --lateral: 20px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--creme);
+    color: var(--marrom);
+    font-family: var(--fonte);
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+  img { display: block; max-width: 100%; height: auto; }
+  h1, h2, h3, p, ul, ol, figure, fieldset, legend { margin: 0; padding: 0; }
+  ul, ol { list-style: none; }
+  fieldset { border: 0; min-width: 0; }
+  h1, h2, h3 { font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+  p { text-wrap: pretty; }
+  strong { font-weight: 600; }
+  a, button, input, label { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--terracota); outline-offset: 3px; }
+  [hidden] { display: none !important; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .pular { position: absolute; left: 12px; top: -60px; z-index: 10; padding: 10px 16px; border-radius: 999px; background: var(--vinho); color: var(--creme); font-weight: 600; text-decoration: none; }
+  .pular:focus { top: 12px; }
+  .premios :focus-visible, .rodape :focus-visible { outline-color: var(--amarelo); }
+  .wrap { width: min(var(--largura), 100% - 2 * var(--lateral)); margin-inline: auto; }
+  .icone { width: 1em; height: 1em; flex: none; fill: currentColor; }
+
+  /* Botões como os do app: pílula, texto em caixa normal. Vinho no creme, amarelo no vinho */
+  .botao {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 58px; padding: 0 34px; border: 0; border-radius: 999px;
+    background: var(--vinho); color: var(--creme);
+    font: inherit; font-size: 17px; font-weight: 600; letter-spacing: 0; text-align: center; white-space: nowrap;
+    text-decoration: none; cursor: pointer;
+    box-shadow: 0 16px 30px -18px rgba(135, 58, 74, .95);
+    transition: transform .18s ease, background-color .18s ease;
+  }
+  .botao:hover { background: #7A3242; }
+  .botao:active { transform: scale(.98); }
+  .botao[disabled] { opacity: .7; cursor: progress; transform: none; }
+  .botao .icone { width: 20px; height: 20px; }
+  .botao--claro { background: transparent; color: var(--vinho); box-shadow: inset 0 0 0 1.5px rgba(135, 58, 74, .45); }
+  .botao--claro:hover { background: rgba(135, 58, 74, .06); }
+  .link-seta {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 6px;
+    border: 0; background: none; color: var(--vinho); font: inherit; font-size: 17px; font-weight: 600;
+    text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 5px; cursor: pointer;
+  }
+  .link-seta:hover { color: #6A2B39; text-decoration-thickness: 3px; }
+
+  /* ===== Topo ===== */
+  .topo { display: flex; justify-content: center; padding: 22px var(--lateral) 6px; }
+  .topo img { width: 168px; }
+
+  /* ===== DOBRA 1 — Desafio e contagem regressiva ===== */
+  .hero { position: relative; overflow: hidden; padding-bottom: 56px; }
+  .hero__grade { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; padding-top: 16px; }
+  .hero__texto { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+  .grupo {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 4px 16px 4px 4px; border-radius: 999px; background: var(--papel); border: 1px solid var(--linha);
+    font-size: 14px; font-weight: 500; color: var(--vinho);
+  }
+  /* ícone da Asfit: símbolo off-white no bordô, combinação do manual (p18) */
+  .grupo img { width: 30px; height: 30px; padding: 0 6px; border-radius: 50%; background: var(--vinho); object-fit: contain; }
+  .hero h1 { font-size: clamp(28px, 7.4vw, 48px); color: var(--marrom); max-width: 16em; }
+  .hero .sub { font-size: 16.5px; line-height: 1.5; color: var(--marrom-apoio); max-width: 31em; }
+
+  /* Contagem: o bordô da marca com os números em off-white */
+  .contagem { width: 100%; max-width: 440px; margin-top: 6px; display: grid; gap: 8px; }
+  .contagem__rotulo { font-size: 14.5px; font-weight: 500; color: var(--marrom-apoio); }
+  .contagem__numeros {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 14px 6px; border-radius: var(--raio-caixa); background: var(--vinho); color: var(--creme);
+    box-shadow: 0 22px 40px -30px rgba(98, 59, 30, .9);
+  }
+  .contagem__numeros span { display: grid; justify-items: center; gap: 2px; font-size: 12.5px; font-weight: 400; color: var(--creme-apoio); }
+  .contagem__numeros span + span { border-left: 1px solid rgba(247, 243, 232, .18); }
+  .contagem__numeros strong { font-size: 34px; font-weight: 500; line-height: 1; letter-spacing: -.02em; color: var(--creme); font-variant-numeric: tabular-nums; }
+  .contagem--fim .contagem__numeros { display: none; }
+  .contagem__fim { padding: 18px; border-radius: var(--raio-caixa); background: var(--vinho); color: var(--creme); font-size: 19px; font-weight: 500; }
+  .hero__botoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 18px; margin-top: 8px; }
+
+  /* Foto da Agatha no pôr do sol (a mesma da captação), com o selo do 11/11 de adesivo */
+  .hero__foto { position: relative; width: min(300px, 78%); margin-inline: auto; }
+  .hero__foto img {
+    width: 100%; aspect-ratio: 853 / 1066; object-fit: cover; border-radius: var(--raio-midia);
+    box-shadow: 0 34px 60px -32px rgba(98, 59, 30, .55);
+  }
+  .selo {
+    width: 96px; aspect-ratio: 1; border-radius: 50%; background: var(--terracota); color: var(--creme);
+    display: grid; place-content: center; justify-items: center; gap: 1px; text-align: center;
+    box-shadow: 0 16px 30px -18px rgba(98, 59, 30, .8);
+  }
+  .selo span { font-size: 9.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; line-height: 1.2; }
+  .selo strong { font-size: 30px; font-weight: 500; letter-spacing: -.02em; line-height: 1; }
+  .hero__foto .selo { position: absolute; z-index: 2; left: -12%; bottom: 7%; transform: rotate(-8deg); }
+
+  /* ===== DOBRA 2 — Prêmios, no bordô ===== */
+  .premios { background: var(--vinho); color: var(--creme); padding: 72px 0 64px; }
+  .premios h2 { font-size: clamp(28px, 6.6vw, 44px); color: var(--creme); max-width: 17em; margin-inline: auto; text-align: center; }
+  .premios__grade { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; margin-top: 40px; }
+  .premio {
+    display: grid; align-content: start; gap: 12px; padding: 18px 16px 18px;
+    border-radius: var(--raio-caixa); background: var(--papel); color: var(--marrom);
+    box-shadow: 0 26px 46px -34px rgba(20, 4, 8, .9);
+  }
+  .premio__rotulo {
+    justify-self: start; display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px;
+    background: var(--vinho); color: var(--creme);
+    font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; line-height: 1.2;
+  }
+  .premio__rotulo .icone { width: 15px; height: 15px; color: var(--amarelo); }
+  .premio h3 { font-size: 25px; color: var(--vinho); }
+  .premio p { font-size: 16px; line-height: 1.5; color: var(--marrom-apoio); max-width: 26em; }
+  .premio__foto img { width: 100%; border-radius: 14px; background: var(--creme-apoio); }
+  .premio__vazio { display: none; }
+  .premio__foto--kit img { aspect-ratio: 1; object-fit: cover; }
+  /* 1º lugar: o card amarelo, o "ouro" da página */
+  .premio--ouro { background: var(--amarelo); color: var(--vinho); }
+  .premio--ouro h3 { font-size: clamp(28px, 7vw, 38px); }
+  .premio--ouro .premio__foto img { aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 22%; }
+  .premio__texto { display: grid; align-content: start; gap: 12px; }
+  .premio__lista { display: grid; gap: 6px; }
+  .premio__lista li { display: flex; gap: 10px; font-size: 18px; font-weight: 500; line-height: 1.35; color: var(--vinho); }
+  .premio__lista li::before { content: "+"; font-weight: 600; color: var(--terracota); }
+  .premios__nota { margin-top: 18px; text-align: center; font-size: 13.5px; font-weight: 400; color: var(--creme-apoio); }
+
+  /* ===== DOBRA 3 — Como somar pontos ===== */
+  .regras { padding: 72px 0 64px; }
+  .regras h2 { font-size: clamp(28px, 6.6vw, 44px); text-align: center; }
+  .passos { display: grid; gap: 26px; max-width: 520px; margin: 40px auto 0; }
+  .passos li { position: relative; display: grid; grid-template-columns: 48px minmax(0, 1fr); align-content: start; column-gap: 16px; row-gap: 4px; }
+  /* traço entre um passo e o próximo: vertical no celular, horizontal no computador */
+  .passos li:not(:last-child)::before { content: ""; position: absolute; left: 23px; top: 54px; bottom: -20px; border-left: 2px dashed rgba(202, 104, 57, .45); }
+  .passos__n {
+    grid-row: span 2; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
+    background: var(--terracota); color: var(--creme); font-size: 21px; font-weight: 600;
+  }
+  .passos h3 { font-size: 22px; color: var(--vinho); padding-top: 10px; }
+  .passos p { font-size: 16.5px; line-height: 1.5; color: var(--marrom-apoio); }
+  .regras__nota { max-width: 30em; margin: 34px auto 0; padding: 14px 18px; border-radius: var(--raio-caixa); background: var(--papel); border: 1px solid var(--linha); text-align: center; font-size: 15.5px; line-height: 1.5; color: var(--marrom-apoio); }
+  .regras__nota strong { color: var(--marrom); font-weight: 600; }
+
+  /* ===== DOBRA 4 — Mandar o post, no amarelo ===== */
+  .enviar { background: var(--amarelo); padding: 64px 0 68px; scroll-margin-top: 0; }
+  .enviar__grade { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .enviar__texto { display: grid; gap: 10px; text-align: center; }
+  .enviar h2 { font-size: clamp(28px, 6.6vw, 42px); color: var(--vinho); }
+  .enviar__texto p { font-size: 16.5px; line-height: 1.5; color: var(--marrom); max-width: 26em; margin-inline: auto; }
+  .cartao {
+    width: 100%; max-width: 520px; margin-inline: auto; padding: 22px 18px 20px;
+    border-radius: var(--raio-midia); background: var(--papel);
+    box-shadow: 0 30px 60px -40px rgba(98, 59, 30, .75);
+  }
+  .form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .campo { position: relative; text-align: left; }
+  .campo input {
+    width: 100%; height: 58px; padding: 22px 18px 6px;
+    border: 1.5px solid rgba(98, 59, 30, .3); border-radius: var(--raio-campo); background: var(--papel);
+    font: inherit; font-size: 16px; font-weight: 400; color: var(--marrom);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .campo label {
+    position: absolute; left: 19px; top: 18px; max-width: calc(100% - 38px);
+    font-size: 16px; font-weight: 400; line-height: 1.4; color: var(--marrom-apoio); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    pointer-events: none; transform-origin: left top; transition: transform .15s ease, color .15s ease;
+  }
+  .campo input:focus { outline: none; border-color: var(--vinho); box-shadow: 0 0 0 4px rgba(135, 58, 74, .14); }
+  .campo input:focus + label, .campo input:not(:placeholder-shown) + label { transform: translateY(-10px) scale(.76); color: var(--vinho); }
+  .campo input[aria-invalid="true"] { border-color: var(--erro); }
+  .ajuda { display: block; padding: 6px 0 0 6px; font-size: 13.5px; font-weight: 400; line-height: 1.4; color: var(--marrom-apoio); }
+  .erro { display: block; padding: 4px 0 0 6px; font-size: 13.5px; font-weight: 500; line-height: 1.4; color: var(--erro); }
+  .erro:empty { display: none; }
+  /* Hoje / Ontem: dois botões de escolha lado a lado */
+  .quando { display: grid; grid-template-columns: auto 1fr 1fr; align-items: center; gap: 8px; }
+  .quando legend { float: left; padding-right: 4px; font-size: 15px; font-weight: 500; color: var(--marrom); }
+  .quando label { position: relative; }
+  .quando input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .quando label span {
+    display: grid; place-items: center; height: 48px; border-radius: 999px;
+    border: 1.5px solid rgba(98, 59, 30, .3); font-size: 16px; font-weight: 500; color: var(--marrom);
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .quando input:checked + span { background: var(--vinho); border-color: var(--vinho); color: var(--creme); }
+  .quando input:focus-visible + span { outline: 3px solid var(--terracota); outline-offset: 3px; }
+  .quando input:disabled { cursor: not-allowed; }
+  .quando input:disabled + span { opacity: .4; }
+  .quando .erro { grid-column: 1 / -1; }
+  .isca { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .form .botao { width: 100%; margin-top: 4px; }
+  .enviado { display: grid; justify-items: center; gap: 6px; padding: 8px 4px 2px; text-align: center; }
+  .enviado .icone { width: 52px; height: 52px; color: var(--verde); }
+  .enviado strong { font-size: 28px; font-weight: 500; letter-spacing: -.02em; color: var(--vinho); }
+  .enviado p { font-size: 16px; line-height: 1.5; color: var(--marrom-apoio); max-width: 24em; }
+  .enviado .numeros { margin: 8px 0 4px; }
+
+  /* Números da participante (depois de mandar o post e na busca do ranking) */
+  .numeros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+  .numeros div { display: grid; gap: 2px; padding: 12px 6px; border-radius: 14px; background: var(--creme); text-align: center; font-size: 12.5px; font-weight: 400; line-height: 1.3; color: var(--marrom-apoio); }
+  .numeros b { font-size: 24px; font-weight: 500; letter-spacing: -.02em; line-height: 1.1; color: var(--vinho); font-variant-numeric: tabular-nums; }
+
+  /* ===== DOBRA 5 — Ranking ===== */
+  .ranking { padding: 72px 0 64px; scroll-margin-top: 0; }
+  .ranking__caixa { max-width: 720px; display: grid; gap: 22px; }
+  .ranking__cabeca { display: grid; gap: 8px; text-align: center; }
+  .ranking h2 { font-size: clamp(30px, 7vw, 46px); }
+  .ranking__cabeca p { font-size: 16.5px; color: var(--marrom-apoio); }
+  .atualizado { display: block; font-size: 13.5px; font-weight: 400; }
+  .busca { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .busca .botao { min-height: 58px; padding: 0 22px; }
+  .eu { padding: 18px 16px; border-radius: var(--raio-caixa); background: var(--papel); border: 1px solid var(--linha); display: grid; gap: 10px; }
+  .eu__topo { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+  .eu__topo strong { font-size: 20px; font-weight: 500; color: var(--vinho); overflow-wrap: anywhere; }
+  .eu__topo span { font-size: 15px; font-weight: 500; color: var(--marrom); }
+  .eu p { font-size: 15px; line-height: 1.5; color: var(--marrom-apoio); }
+  .eu .fogo { display: inline-flex; align-items: center; gap: 6px; color: var(--terracota); font-weight: 500; }
+  .eu .fogo .icone { width: 18px; height: 18px; }
+
+  .lista { display: grid; gap: 8px; }
+  .linha {
+    display: grid; grid-template-columns: 34px 40px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+    min-height: 64px; padding: 10px 14px 10px 10px; border-radius: 16px; background: var(--papel); border: 1px solid var(--linha);
+  }
+  .linha__pos { text-align: center; font-size: 17px; font-weight: 600; color: var(--marrom-apoio); font-variant-numeric: tabular-nums; }
+  .linha__avatar { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-size: 17px; font-weight: 600; text-transform: uppercase; }
+  .cor-0 { background: var(--vinho); color: var(--creme); }
+  .cor-1 { background: var(--terracota); color: var(--creme); }
+  .cor-2 { background: var(--amarelo); color: var(--marrom); }
+  .cor-3 { background: var(--marrom); color: var(--creme); }
+  .cor-4 { background: var(--creme-apoio); color: var(--vinho); }
+  .linha__nome { display: grid; gap: 1px; min-width: 0; }
+  .linha__nome a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16.5px; font-weight: 500; color: var(--marrom); text-decoration: none; }
+  .linha__nome a:hover { text-decoration: underline; }
+  .linha__nome small { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 400; color: var(--marrom-apoio); }
+  .linha__nome small .icone { width: 15px; height: 15px; color: var(--terracota); }
+  .linha__pts { text-align: right; font-size: 13px; font-weight: 400; color: var(--marrom-apoio); white-space: nowrap; }
+  .linha__pts strong { display: block; font-size: 22px; font-weight: 500; line-height: 1; letter-spacing: -.02em; color: var(--vinho); font-variant-numeric: tabular-nums; }
+  /* As 11 que levam prêmio: borda bordô; a primeira no amarelo */
+  .linha--premio { border-color: rgba(135, 58, 74, .35); box-shadow: inset 4px 0 0 var(--vinho); }
+  .linha--premio .linha__pos { color: var(--vinho); }
+  .linha--primeira { background: var(--amarelo); border-color: transparent; box-shadow: 0 18px 30px -24px rgba(98, 59, 30, .8); }
+  .linha--eu { outline: 2px solid var(--terracota); outline-offset: 2px; }
+  .corte { display: flex; align-items: center; gap: 12px; padding: 4px 2px; font-size: 13px; font-weight: 500; color: var(--vinho); }
+  .corte::before, .corte::after { content: ""; flex: 1; border-top: 1.5px dashed rgba(135, 58, 74, .4); }
+  .ranking__vazio { padding: 28px 20px; border-radius: var(--raio-caixa); background: var(--papel); border: 1px dashed rgba(98, 59, 30, .3); text-align: center; display: grid; gap: 12px; justify-items: center; }
+  .ranking__vazio p { font-size: 16.5px; color: var(--marrom-apoio); max-width: 24em; }
+  .ranking__pe { display: grid; justify-items: center; gap: 12px; }
+  .legenda { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 400; color: var(--marrom-apoio); }
+  .legenda .icone { width: 16px; height: 16px; color: var(--terracota); }
+  /* esqueleto enquanto o ranking chega */
+  .linha--carregando { min-height: 64px; background: linear-gradient(90deg, var(--papel) 30%, #F3EDE0 50%, var(--papel) 70%) 0 0 / 200% 100%; border-color: transparent; }
+  @media (prefers-reduced-motion: no-preference) {
+    .linha--carregando { animation: brilho 1.4s linear infinite; }
+    @keyframes brilho { to { background-position: -200% 0; } }
+  }
+
+  /* ===== DOBRA 6 — Mural ===== */
+  .mural { padding: 64px 0 68px; background: var(--papel); border-top: 1px solid var(--linha); }
+  .mural__cabeca { display: grid; gap: 8px; text-align: center; }
+  .mural h2 { font-size: clamp(28px, 6.6vw, 42px); }
+  .mural__cabeca p { font-size: 16.5px; color: var(--marrom-apoio); }
+  .mural__grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 30px; }
+  .tile a {
+    display: grid; align-content: space-between; gap: 14px; min-height: 124px; height: 100%; padding: 14px 14px 12px;
+    border-radius: var(--raio-caixa); text-decoration: none; transition: transform .2s var(--mola);
+  }
+  .tile a:hover { transform: translateY(-2px) rotate(-.5deg); }
+  .tile--0 a { background: var(--vinho); color: var(--creme); }
+  .tile--1 a { background: var(--amarelo); color: var(--vinho); }
+  .tile--2 a { background: var(--terracota); color: var(--creme); }
+  .tile--3 a { background: var(--creme-apoio); color: var(--vinho); }
+  .tile--4 a { background: var(--marrom); color: var(--creme); }
+  .tile__topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; }
+  .tile__tipo { padding: 3px 10px; border-radius: 999px; background: rgba(255, 252, 245, .22); }
+  .tile--1 .tile__tipo, .tile--3 .tile__tipo { background: rgba(135, 58, 74, .12); }
+  .tile__nome { font-size: 17px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+  .tile__ver { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 500; }
+  .tile__ver .icone { width: 16px; height: 16px; }
+  .mural__vazio { grid-column: 1 / -1; padding: 28px 20px; border-radius: var(--raio-caixa); border: 1px dashed rgba(98, 59, 30, .3); text-align: center; color: var(--marrom-apoio); }
+  .mural__pe { display: flex; justify-content: center; margin-top: 22px; }
+
+  /* ===== DOBRA 7 — Fecho ===== */
+  .fecho { padding: 76px 0 72px; text-align: center; }
+  .fecho__caixa { max-width: 860px; display: grid; justify-items: center; gap: 18px; }
+  .fecho .selo { transform: rotate(-6deg); margin-bottom: 6px; }
+  .fecho h2 { font-size: clamp(30px, 6.8vw, 48px); color: var(--marrom); max-width: 15em; }
+  .fecho p { font-size: 18px; color: var(--marrom-apoio); max-width: 30em; text-wrap: balance; }
+  .fecho .botao { margin-top: 8px; }
+
+  /* ===== Rodapé ===== */
+  /* Pattern do manual (ASFIT e o olho alternados) em off-white sobre bordô */
+  .rodape { background: var(--vinho-escuro); color: rgba(247, 243, 232, .8); font-size: 14px; font-weight: 400; }
+  .rodape__pattern { height: 140px; background: url(img/pattern.webp) center top / 232px 92px repeat; opacity: .22; }
+  .rodape p { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; padding: 18px var(--lateral) 26px; }
+  .rodape a { text-decoration: none; }
+  .rodape a:hover { text-decoration: underline; }
+
+  @media (max-width: 380px) {
+    .contagem__numeros strong { font-size: 29px; }
+    .botao { padding: 0 24px; }
+    .linha { grid-template-columns: 26px 36px minmax(0, 1fr) auto; gap: 8px; padding-right: 10px; }
+    .linha__avatar { width: 36px; height: 36px; }
+  }
+
+  /* ===== Telas maiores ===== */
+  @media (min-width: 760px) {
+    .premios__grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    /* o 1º lugar ocupa a linha inteira: foto de um lado, prêmio do outro */
+    .premio--ouro { grid-column: 1 / -1; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: 28px; padding: 22px; }
+    .premio--ouro .premio__foto img { aspect-ratio: 4 / 5; max-height: 420px; }
+    .premio__foto--kit img { aspect-ratio: 4 / 3; }
+    .premio--ouro .premio__texto { gap: 16px; padding-right: 12px; }
+    .premio--ouro h3 { font-size: 40px; }
+    .premio--ouro .premio__lista li { font-size: 20px; }
+    /* os dois kits lado a lado, com rótulo, título, texto e foto alinhados */
+    @supports (grid-template-rows: subgrid) {
+      .premios__grade { grid-template-rows: auto auto auto auto 1fr; }
+      .premio--ouro { grid-row: 1; }
+      .premio:not(.premio--ouro) { grid-row: 2 / span 4; grid-template-rows: subgrid; }
+      .premio__vazio { display: block; }
+    }
+    .mural__grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cartao { padding: 28px 26px 24px; }
+  }
+
+  @media (min-width: 900px) {
+    .topo { padding-top: 30px; }
+    .topo img { width: 200px; }
+    .hero__grade { grid-template-columns: minmax(0, 1.22fr) minmax(0, .78fr); gap: 36px; padding-top: 8px; }
+    .hero__texto { align-items: flex-start; text-align: left; align-self: center; padding: 20px 0 64px; gap: 18px; }
+    .hero h1 { font-size: clamp(38px, 3.6vw, 46px); max-width: none; }
+    .hero .sub { font-size: 19px; }
+    .hero__botoes { justify-content: flex-start; }
+    .hero { padding-bottom: 72px; }
+    .hero__foto { width: min(420px, 100%); align-self: center; }
+    .selo { width: 124px; }
+    .selo span { font-size: 11.5px; }
+    .selo strong { font-size: 39px; }
+    .hero__foto .selo { width: 104px; left: -10%; }
+    .hero__foto .selo strong { font-size: 33px; }
+
+    .premios { padding: 104px 0 88px; }
+    .premios__grade { gap: 24px; margin-top: 56px; }
+
+    .regras { padding: 104px 0 88px; }
+    .passos { max-width: none; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; margin-top: 56px; }
+    .passos li:not(:last-child)::before { left: 58px; right: -28px; top: 23px; bottom: auto; border-left: 0; border-top: 2px dashed rgba(202, 104, 57, .45); }
+    .passos li { grid-template-columns: minmax(0, 1fr); row-gap: 10px; }
+    .passos__n { grid-row: auto; }
+    .passos h3 { padding-top: 6px; }
+
+    .enviar { padding: 96px 0; }
+    .enviar__grade { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: 56px; }
+    .enviar__texto { text-align: left; }
+    .enviar__texto p { margin-inline: 0; font-size: 18px; }
+    .cartao { margin-inline: 0 auto; }
+
+    .ranking { padding: 104px 0 88px; }
+    .mural { padding: 96px 0; }
+    .mural__grade { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .fecho { padding: 112px 0 104px; }
+    .fecho p { font-size: 19px; }
+  }
+
+  /* Movimento igual ao da captação: abertura entrando e blocos surgindo ao rolar */
+  @media (prefers-reduced-motion: no-preference) {
+    .js .entra { opacity: 0; transform: translateY(18px); animation: entra .9s var(--mola) forwards; animation-delay: calc(var(--d, 0) * 90ms); }
+    @keyframes entra { to { opacity: 1; transform: none; } }
+    .js .revela { opacity: 0; transform: translateY(28px); transition: opacity .9s var(--mola), transform .9s var(--mola); transition-delay: calc(var(--d, 0) * 70ms); }
+    .js .revela.visivel { opacity: 1; transform: none; }
+    .js .fecho .selo.revela.visivel { transform: rotate(-6deg); }
+    /* linhas do ranking entrando em cascata quando os dados chegam */
+    .linha--nova { animation: chega .6s var(--mola) both; animation-delay: calc(var(--i, 0) * 35ms); }
+    @keyframes chega { from { opacity: 0; transform: translateY(10px); } }
+    .enviado:not([hidden]) .icone { animation: pulo .7s var(--mola) both; }
+    @keyframes pulo { from { transform: scale(.4); opacity: 0; } }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .botao, .campo label, .tile a { transition: none; }
+  }
+</style>
+</head>
+<body>
+<script>document.documentElement.className += ' js'</script>
+
+<!-- Ícones (Phosphor) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-fogo" viewBox="0 0 256 256"><path d="M143.38,17.85a8,8,0,0,0-12.63,3.41l-22,60.41L84.59,58.26a8,8,0,0,0-11.93.89C51,87.53,40,116.08,40,144a88,88,0,0,0,176,0C216,84.55,165.21,36,143.38,17.85Zm40.51,135.49a57.6,57.6,0,0,1-46.56,46.55A7.65,7.65,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z"/></symbol>
+  <symbol id="i-trofeu" viewBox="0 0 256 256"><path d="M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z"/></symbol>
+  <symbol id="i-enviar" viewBox="0 0 256 256"><path d="M231.4,44.34s0,.1,0,.15l-58.2,191.94a15.88,15.88,0,0,1-14,11.51q-.69.06-1.38.06a15.86,15.86,0,0,1-14.42-9.15L107,164.15a4,4,0,0,1,.77-4.58l57.92-57.92a8,8,0,0,0-11.31-11.31L96.43,148.26a4,4,0,0,1-4.58.77L17.08,112.64a16,16,0,0,1,2.49-29.8l191.94-58.2.15,0A16,16,0,0,1,231.4,44.34Z"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
+  <symbol id="i-abrir" viewBox="0 0 256 256"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"/></symbol>
+</svg>
+
+<a class="pular" href="#enviar">Ir para o envio do post</a>
+
+<header class="topo">
+  <img src="img/logo-terracota-336.webp" alt="ASFIT, além do shape" width="336" height="70">
+</header>
+
+<main>
+
+<!-- ===== DOBRA 1 — Desafio e contagem regressiva ===== -->
+<section class="hero" aria-labelledby="titulo">
+  <div class="wrap hero__grade">
+    <div class="hero__texto">
+      <p class="grupo entra" style="--d:0"><img src="img/simbolo-creme.webp" alt="" width="168" height="91">Desafio do Engajamento</p>
+      <h1 id="titulo" class="entra" style="--d:1">Mô, chegou a hora de movimentar essa legião e ainda concorrer a prêmios.</h1>
+      <p class="sub entra" style="--d:2">Posta todo dia marcando a @asfitcomunidade, manda o link aqui e sobe no ranking.</p>
+
+      <div class="contagem entra" id="contagem" style="--d:3">
+        <p class="contagem__rotulo">O desafio acaba em</p>
+        <div class="contagem__numeros" aria-hidden="true">
+          <span><strong data-c="dias">--</strong>dias</span>
+          <span><strong data-c="horas">--</strong>horas</span>
+          <span><strong data-c="min">--</strong>min</span>
+          <span><strong data-c="seg">--</strong>seg</span>
+        </div>
+        <p class="sr-only">O desafio vai até 11 de novembro, às 23h59.</p>
+        <p class="contagem__fim" hidden>O desafio acabou dia 11/11.</p>
+      </div>
+      <script>
+        // Já desenha os números antes da primeira pintura (o script do fim da página continua a contagem)
+        (function () {
+          var falta = Math.max(0, Date.parse('2026-11-11T23:59:59-03:00') - Date.now());
+          var s = Math.floor(falta / 1000), v = { dias: Math.floor(s / 86400), horas: Math.floor(s / 3600) % 24, min: Math.floor(s / 60) % 60, seg: s % 60 };
+          var els = document.querySelectorAll('#contagem [data-c]');
+          for (var i = 0; i < els.length; i++) { var n = v[els[i].getAttribute('data-c')]; els[i].textContent = n < 10 ? '0' + n : n; }
+        })();
+      </script>
+
+      <div class="hero__botoes entra" style="--d:4">
+        <a class="botao" href="#enviar">Mandar meu post</a>
+        <a class="link-seta" href="#ranking">Ver o ranking</a>
+      </div>
+    </div>
+
+    <div class="hero__foto entra" style="--d:2">
+      <img src="img/agatha-por-do-sol.webp" srcset="img/agatha-por-do-sol-640.webp 640w, img/agatha-por-do-sol.webp 853w" sizes="(min-width: 900px) 420px, 200px" alt="Agatha Sá no pôr do sol, com a logo da ASFIT no céu" width="853" height="1066" fetchpriority="high">
+      <div class="selo" role="img" aria-label="Até 11 de novembro"><span>Até</span><strong>11/11</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DOBRA 2 — Prêmios ===== -->
+<section class="premios" aria-labelledby="titulo-premios">
+  <div class="wrap">
+    <h2 id="titulo-premios" class="revela">As 11 ASFiters que mais engajarem nessa fase vão ganhar:</h2>
+    <div class="premios__grade">
+      <article class="premio premio--ouro revela">
+        <figure class="premio__foto">
+          <img src="img/agatha-academia-480.webp" srcset="img/agatha-academia-480.webp 480w, img/agatha-academia.webp 800w" sizes="(min-width: 1120px) 470px, (min-width: 760px) 42vw, 100vw" alt="Agatha Sá na academia" width="800" height="1064" loading="lazy">
+        </figure>
+        <div class="premio__texto">
+          <span class="premio__rotulo"><svg class="icone" aria-hidden="true"><use href="#i-trofeu"/></svg>1º lugar</span>
+          <h3>Gravação com a Agatha</h3>
+          <ul class="premio__lista">
+            <li>post em collab com a ASFIT</li>
+            <li>6 meses de acesso à ASFIT</li>
+          </ul>
+        </div>
+      </article>
+      <article class="premio revela" style="--d:1">
+        <span class="premio__rotulo">2º ao 11º lugar</span>
+        <h3>Look + suplementação</h3>
+        <p class="premio__vazio" aria-hidden="true"></p>
+        <figure class="premio__foto premio__foto--kit">
+          <img src="img/kit-2-480.webp" srcset="img/kit-2-480.webp 480w, img/kit-2-800.webp 800w" sizes="(min-width: 1120px) 540px, (min-width: 760px) 46vw, 100vw" alt="Caixa da ASFIT com cropped, shortinho, whey e creatina" width="800" height="800" loading="lazy">
+        </figure>
+      </article>
+      <article class="premio revela" style="--d:2">
+        <span class="premio__rotulo">E tem mais</span>
+        <h3>Press kit personalizado ASFIT</h3>
+        <p>Quem postar todos os dias até o 11/11 marcando a ASFIT também concorre.</p>
+        <figure class="premio__foto premio__foto--kit">
+          <img src="img/press-kit-480.webp" srcset="img/press-kit-480.webp 480w, img/press-kit-800.webp 800w" sizes="(min-width: 1120px) 540px, (min-width: 760px) 46vw, 100vw" alt="Press kit da ASFIT com garrafa, creatina e mini band" width="800" height="800" loading="lazy">
+        </figure>
+      </article>
+    </div>
+    <p class="premios__nota revela">Imagens ilustrativas.</p>
+  </div>
+</section>
+
+<!-- ===== DOBRA 3 — Como somar pontos ===== -->
+<section class="regras" aria-labelledby="titulo-regras">
+  <div class="wrap">
+    <h2 id="titulo-regras" class="revela">Como somar pontos</h2>
+    <ol class="passos">
+      <li class="revela"><span class="passos__n" aria-hidden="true">1</span><h3>Posta todo dia</h3><p>Mostra seu treino ou o que significa viver o #AlémDoShape, marcando a @asfitcomunidade.</p></li>
+      <li class="revela" style="--d:1"><span class="passos__n" aria-hidden="true">2</span><h3>Manda o link aqui</h3><p>Quando a equipe aprovar, o dia vale 1 ponto no ranking.</p></li>
+      <li class="revela" style="--d:2"><span class="passos__n" aria-hidden="true">3</span><h3>Movimenta a legião</h3><p>Comentar, compartilhar e chamar as gostosas vale ponto extra.</p></li>
+    </ol>
+    <p class="regras__nota revela">Vale post, reels e story. <strong>Cada dia conta 1 ponto</strong>, mesmo se você postar mais de uma vez.</p>
+  </div>
+</section>
+
+<!-- ===== DOBRA 4 — Mandar o post ===== -->
+<section class="enviar" id="enviar" aria-labelledby="titulo-enviar">
+  <div class="wrap enviar__grade">
+    <div class="enviar__texto revela">
+      <h2 id="titulo-enviar">Manda o link do seu post</h2>
+      <p>Seu perfil precisa estar aberto pra equipe conferir.</p>
+    </div>
+
+    <form class="cartao form revela" id="form-post" novalidate style="--d:1">
+      <div class="campo">
+        <input id="arroba" name="arroba" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder=" " required aria-describedby="erro-arroba">
+        <label for="arroba">Seu @ no Instagram</label>
+        <span class="erro" id="erro-arroba" aria-live="polite"></span>
+      </div>
+      <div class="campo">
+        <input id="link" name="link" type="url" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder=" " required aria-describedby="ajuda-link erro-link">
+        <label for="link">Link do post</label>
+        <span class="ajuda" id="ajuda-link">No Instagram, toca nos três pontinhos e em Copiar link.</span>
+        <span class="erro" id="erro-link" aria-live="polite"></span>
+      </div>
+      <fieldset class="quando" aria-describedby="erro-quando">
+        <legend>Esse post é de</legend>
+        <label><input type="radio" name="quando" value="hoje" checked><span>Hoje</span></label>
+        <label><input type="radio" name="quando" value="ontem"><span>Ontem</span></label>
+        <span class="erro" id="erro-quando" aria-live="polite"></span>
+      </fieldset>
+      <input class="isca" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="botao" type="submit"><svg class="icone" aria-hidden="true"><use href="#i-enviar"/></svg><span>Mandar meu post</span></button>
+      <span class="erro" id="erro-geral" aria-live="polite"></span>
+
+      <div class="enviado" role="status" aria-live="polite" hidden>
+        <svg class="icone" aria-hidden="true"><use href="#i-ok"/></svg>
+        <strong>Recebido!</strong>
+        <p>Seu post entra no ranking assim que a equipe aprovar.</p>
+        <div class="numeros" id="enviado-numeros"></div>
+        <button class="link-seta" type="button" id="outro-post">Mandar outro post</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ===== DOBRA 5 — Ranking ===== -->
+<section class="ranking" id="ranking" aria-labelledby="titulo-ranking">
+  <div class="wrap ranking__caixa">
+    <div class="ranking__cabeca revela">
+      <h2 id="titulo-ranking">Ranking da legião</h2>
+      <p>As 11 primeiras levam prêmio. <span class="atualizado" id="atualizado"></span></p>
+    </div>
+
+    <form class="busca revela" id="busca" role="search" novalidate>
+      <div class="campo">
+        <input id="busca-arroba" name="arroba" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder=" " aria-describedby="erro-busca">
+        <label for="busca-arroba">Ache sua posição pelo @</label>
+      </div>
+      <button class="botao" type="submit">Buscar</button>
+      <span class="erro" id="erro-busca" aria-live="polite" style="grid-column: 1 / -1"></span>
+    </form>
+    <div class="eu" id="eu" aria-live="polite" hidden></div>
+
+    <ol class="lista" id="lista" translate="no">
+      <li class="linha linha--carregando" aria-hidden="true"></li>
+      <li class="linha linha--carregando" aria-hidden="true"></li>
+      <li class="linha linha--carregando" aria-hidden="true"></li>
+    </ol>
+    <div class="ranking__pe">
+      <button class="botao botao--claro" type="button" id="ver-mais" hidden>Ver ranking completo</button>
+      <p class="legenda"><svg class="icone" aria-hidden="true"><use href="#i-fogo"/></svg>Postou todos os dias até agora</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DOBRA 6 — Mural ===== -->
+<section class="mural" id="mural" aria-labelledby="titulo-mural">
+  <div class="wrap">
+    <div class="mural__cabeca revela">
+      <h2 id="titulo-mural">Mural da legião</h2>
+      <p>Os posts aprovados aparecem aqui.</p>
+    </div>
+    <ul class="mural__grade" id="mural-grade" translate="no"></ul>
+    <div class="mural__pe"><button class="botao botao--claro" type="button" id="mural-mais" hidden>Ver mais posts</button></div>
+  </div>
+</section>
+
+<!-- ===== DOBRA 7 — Fecho ===== -->
+<section class="fecho" aria-labelledby="titulo-fecho">
+  <div class="wrap fecho__caixa">
+    <div class="selo revela" role="img" aria-label="Até 11 de novembro"><span>Até</span><strong>11/11</strong></div>
+    <h2 id="titulo-fecho" class="revela" style="--d:1">Então já sabe: treina, posta, comenta, compartilha e chama as gostosasss.</h2>
+    <p class="revela" style="--d:2">Quero ver essa legião ocupando tudo até o 11/11. 🧿✨</p>
+    <div class="revela" style="--d:3"><a class="botao" href="#enviar">Mandar meu post</a></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="rodape">
+  <div class="rodape__pattern" aria-hidden="true"></div>
+  <p><a href="https://www.instagram.com/agathasa/" target="_blank" rel="noopener">@agathasa</a><a href="https://www.instagram.com/asfitcomunidade/" target="_blank" rel="noopener">@asfitcomunidade</a></p>
+</footer>
+
+<script>
+  (function () {
+    // ===== Datas do desafio (as mesmas do functions/api/[[rota]].js) =====
+    var CONFIG = {
+      inicio: '2026-10-16',
+      fim: '2026-11-11',
+      fimMs: Date.parse('2026-11-11T23:59:59-03:00'),
+      totalDias: 27,
+      premiadas: 11,
+      // A API e o banco ficam no Cloudflare (desafio-asfit.pages.dev). Hospedada em outro lugar (Netlify),
+      // a página chama o endereço completo; a API aceita pedido de qualquer domínio.
+      api: /(^|\.)desafio-asfit\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) ? '/api' : 'https://desafio-asfit.pages.dev/api'
+    };
+
+    function seguro(nome, fn) { try { fn(); } catch (e) { if (window.console) console.error(nome, e); } }
+    function $(s) { return document.querySelector(s); }
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function dataCurta(iso) { var p = String(iso).split('-'); return p[2] + '/' + p[1]; }
+    function plural(n, um, varios) { return n + ' ' + (n === 1 ? um : varios); }
+    function icone(id) { return '<svg class="icone" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
+    function guardar(chave, valor) { try { localStorage.setItem(chave, valor); } catch (e) {} }
+    function ler(chave) { try { return localStorage.getItem(chave) || ''; } catch (e) { return ''; } }
+    function corDe(arroba) { var h = 0; for (var i = 0; i < arroba.length; i++) h = (h * 31 + arroba.charCodeAt(i)) >>> 0; return 'cor-' + (h % 5); }
+    function inicial(arroba) { var m = String(arroba).match(/[a-z0-9]/i); return m ? m[0] : '@'; }
+    function limparArroba(v) {
+      var s = String(v || '').trim();
+      var m = s.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+      if (m) s = m[1];
+      return s.replace(/^@+/, '').trim().toLowerCase();
+    }
+    var reduzir = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function api(caminho, opcoes) {
+      opcoes = opcoes || {};
+      var cfg = { method: opcoes.method || 'GET', headers: {} };
+      if (opcoes.corpo) { cfg.headers['content-type'] = 'application/json'; cfg.body = JSON.stringify(opcoes.corpo); }
+      return fetch(CONFIG.api + caminho, cfg).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (dados) {
+          if (!r.ok) { var e = new Error(dados.erro || 'Não deu certo agora. Tenta de novo.'); e.campo = dados.campo; e.status = r.status; throw e; }
+          return dados;
+        });
+      });
+    }
+
+    // ===== Contagem regressiva =====
+    seguro('contagem', function () {
+      var caixa = $('#contagem');
+      var els = {};
+      Array.prototype.forEach.call(caixa.querySelectorAll('[data-c]'), function (el) { els[el.getAttribute('data-c')] = el; });
+      var timer = null;
+      function dois(n) { return n < 10 ? '0' + n : String(n); }
+      function passo() {
+        var falta = CONFIG.fimMs - Date.now();
+        if (falta <= 0) {
+          caixa.classList.add('contagem--fim');
+          caixa.querySelector('.contagem__rotulo').hidden = true;
+          caixa.querySelector('.contagem__fim').hidden = false;
+          clearInterval(timer); timer = null;
+          return;
+        }
+        var s = Math.floor(falta / 1000);
+        els.dias.textContent = dois(Math.floor(s / 86400));
+        els.horas.textContent = dois(Math.floor(s / 3600) % 24);
+        els.min.textContent = dois(Math.floor(s / 60) % 60);
+        els.seg.textContent = dois(s % 60);
+      }
+      function ligar() { if (!timer) { passo(); timer = setInterval(passo, 1000); } }
+      function desligar() { clearInterval(timer); timer = null; }
+      document.addEventListener('visibilitychange', function () { document.hidden ? desligar() : ligar(); });
+      ligar();
+    });
+
+    // ===== Ranking =====
+    var lista = $('#lista');
+    var verMais = $('#ver-mais');
+    var expandido = false;
+    var ultimoPainel = null;
+    var buscada = ler('desafio-arroba');
+    var carregadoEm = 0;
+
+    var jaAnimou = false;
+
+    function linhaHtml(p, i, animar) {
+      var classes = 'linha' + (animar ? ' linha--nova' : '');
+      if (p.p <= CONFIG.premiadas) classes += ' linha--premio';
+      if (p.p === 1) classes += ' linha--primeira';
+      if (buscada && p.a === buscada) classes += ' linha--eu';
+      var detalhe = p.d + ' de ' + CONFIG.totalDias + ' dias' + (p.x ? ' · ' + (p.x > 0 ? '+' : '') + p.x + ' extra' + (Math.abs(p.x) === 1 ? '' : 's') : '');
+      return '<li class="' + classes + '" style="--i:' + i + '">' +
+        '<span class="linha__pos">' + p.p + 'º</span>' +
+        '<span class="linha__avatar ' + corDe(p.a) + '" aria-hidden="true">' + esc(inicial(p.a)) + '</span>' +
+        '<span class="linha__nome"><a href="https://www.instagram.com/' + esc(p.a) + '/" target="_blank" rel="noopener">@' + esc(p.a) + '</a>' +
+        '<small>' + esc(detalhe) + (p.td ? icone('i-fogo') + '<span class="sr-only">postou todos os dias até agora</span>' : '') + '</small></span>' +
+        '<span class="linha__pts"><strong>' + p.pts + '</strong>' + (p.pts === 1 ? 'ponto' : 'pontos') + '</span>' +
+        '</li>';
+    }
+
+    function desenharRanking(dados) {
+      ultimoPainel = dados;
+      var r = dados.ranking || [];
+      $('#atualizado').textContent = 'Atualizado às ' + new Date(dados.atualizado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.';
+      if (!r.length) {
+        lista.innerHTML = '<li class="ranking__vazio"><p>O ranking abre com os primeiros posts aprovados. Manda o seu e sai na frente!</p><a class="botao" href="#enviar">Mandar meu post</a></li>';
+        verMais.hidden = true;
+        return;
+      }
+      var mostrar = expandido ? r : r.slice(0, CONFIG.premiadas);
+      var html = '';
+      var animar = !jaAnimou && !reduzir;
+      jaAnimou = true;
+      mostrar.forEach(function (p, i) {
+        html += linhaHtml(p, i, animar);
+        if (p.p === CONFIG.premiadas && mostrar.length > CONFIG.premiadas) html += '<li class="corte" aria-hidden="true">Até aqui, zona de prêmio</li>';
+      });
+      if (expandido && dados.participantes > r.length) html += '<li class="corte" aria-hidden="true">Mostrando as ' + r.length + ' primeiras de ' + dados.participantes + '. Busca o seu @ lá em cima.</li>';
+      lista.innerHTML = html;
+      verMais.hidden = expandido || r.length <= CONFIG.premiadas;
+    }
+
+    function carregarRanking() {
+      carregadoEm = Date.now();
+      return api('/painel').then(desenharRanking).catch(function () {
+        if (!ultimoPainel) lista.innerHTML = '<li class="ranking__vazio"><p>Não deu pra carregar o ranking agora. Atualiza a página daqui a pouquinho.</p></li>';
+      });
+    }
+
+    seguro('ranking', function () {
+      verMais.addEventListener('click', function () { expandido = true; if (ultimoPainel) desenharRanking(ultimoPainel); });
+      carregarRanking();
+      // Atualiza sozinho a cada minuto enquanto a página está aberta
+      setInterval(function () { if (!document.hidden) carregarRanking(); }, 60000);
+      document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - carregadoEm > 30000) carregarRanking(); });
+    });
+
+    // ===== Números da participante =====
+    function numerosHtml(eu) {
+      var primeiro = eu.posicao ? '<div><b>' + eu.posicao + 'º</b>no ranking</div>' : '<div><b>' + (eu.dias || 0) + '</b>' + ((eu.dias || 0) === 1 ? 'dia aprovado' : 'dias aprovados') + '</div>';
+      return primeiro +
+        '<div><b>' + (eu.pontos || 0) + '</b>' + ((eu.pontos || 0) === 1 ? 'ponto' : 'pontos') + '</div>' +
+        '<div><b>' + (eu.pendentes || 0) + '</b>em análise</div>';
+    }
+
+    function desenharEu(eu) {
+      var caixa = $('#eu');
+      buscada = eu.arroba;
+      var html;
+      if (!eu.existe || (!eu.pontos && !eu.pendentes && !(eu.recusados || []).length)) {
+        html = '<div class="eu__topo"><strong>@' + esc(eu.arroba) + '</strong></div>' +
+          '<p>Ainda não tem nenhum post desse @ no desafio. Manda o primeiro e entra no ranking!</p>';
+      } else if (eu.bloqueada) {
+        html = '<div class="eu__topo"><strong>@' + esc(eu.arroba) + '</strong></div><p>Esse perfil não está participando do desafio.</p>';
+      } else {
+        html = '<div class="eu__topo"><strong>@' + esc(eu.arroba) + '</strong><span>' + (eu.posicao ? eu.posicao + 'º lugar' : 'Ainda fora do ranking') + '</span></div>' +
+          '<div class="numeros">' + numerosHtml(eu) + '</div>' +
+          '<p>' + plural(eu.dias || 0, 'dia', 'dias') + ' com post aprovado, de ' + CONFIG.totalDias + '.' + (eu.extras ? ' Mais ' + plural(eu.extras, 'ponto extra', 'pontos extras') + '.' : '') + '</p>' +
+          (eu.todo_dia ? '<p class="fogo">' + icone('i-fogo') + 'Você postou todos os dias até agora!</p>' : '') +
+          ((eu.recusados || []).length ? '<p>Não aprovado: ' + eu.recusados.map(function (r) { return dataCurta(r.dia) + (r.motivo ? ' (' + esc(r.motivo) + ')' : ''); }).join(', ') + '.</p>' : '');
+      }
+      caixa.innerHTML = html;
+      caixa.hidden = false;
+      if (ultimoPainel) desenharRanking(ultimoPainel);
+    }
+
+    seguro('busca', function () {
+      var form = $('#busca');
+      var campo = $('#busca-arroba');
+      var erroBusca = $('#erro-busca');
+      if (buscada) campo.value = '@' + buscada;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var arroba = limparArroba(campo.value);
+        erroBusca.textContent = '';
+        if (!arroba) { erroBusca.textContent = 'Escreve o seu @ do Instagram.'; campo.focus(); return; }
+        var botao = form.querySelector('button');
+        botao.disabled = true;
+        api('/eu?arroba=' + encodeURIComponent(arroba)).then(function (eu) {
+          guardar('desafio-arroba', eu.arroba);
+          desenharEu(eu);
+        }).catch(function (err) {
+          erroBusca.textContent = err.message;
+        }).then(function () { botao.disabled = false; });
+      });
+    });
+
+    // ===== Mandar o post =====
+    seguro('form', function () {
+      var form = $('#form-post');
+      var arroba = $('#arroba');
+      var link = $('#link');
+      var botao = form.querySelector('button[type="submit"]');
+      var textoBotao = botao.querySelector('span');
+      var enviado = form.querySelector('.enviado');
+      var erros = { arroba: $('#erro-arroba'), link: $('#erro-link'), quando: $('#erro-quando'), geral: $('#erro-geral') };
+      var campos = form.querySelectorAll('.campo, .quando, .botao, #erro-geral');
+      if (buscada) arroba.value = '@' + buscada;
+
+      // Hoje é o primeiro dia: "Ontem" ainda não existe
+      var hojeBr = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
+      if (hojeBr <= CONFIG.inicio) form.querySelector('input[value="ontem"]').disabled = true;
+      if (hojeBr > CONFIG.fim) { form.querySelector('input[value="ontem"]').checked = true; form.querySelector('input[value="hoje"]').disabled = true; }
+
+      function limparErros() {
+        Object.keys(erros).forEach(function (k) { erros[k].textContent = ''; });
+        arroba.removeAttribute('aria-invalid'); link.removeAttribute('aria-invalid');
+      }
+      function mostrarErro(campo, texto) {
+        var alvo = erros[campo] || erros.geral;
+        alvo.textContent = texto;
+        if (campo === 'arroba') { arroba.setAttribute('aria-invalid', 'true'); arroba.focus(); }
+        if (campo === 'link') { link.setAttribute('aria-invalid', 'true'); link.focus(); }
+      }
+      [arroba, link].forEach(function (el) {
+        el.addEventListener('input', function () { if (el.getAttribute('aria-invalid')) { el.removeAttribute('aria-invalid'); erros[el.id].textContent = ''; } });
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        limparErros();
+        var a = limparArroba(arroba.value);
+        if (!a) return mostrarErro('arroba', 'Escreve o seu @ do Instagram.');
+        if (!/^[a-z0-9._]{1,30}$/.test(a)) return mostrarErro('arroba', 'Confere o seu @. Só vale letra, número, ponto e _.');
+        if (!/instagr(am\.com|\.am)\//i.test(link.value)) return mostrarErro('link', 'Cola aqui o link de um post, reels ou story do Instagram.');
+        var quando = (form.querySelector('input[name="quando"]:checked') || {}).value || 'hoje';
+        botao.disabled = true;
+        textoBotao.textContent = 'Mandando…';
+        api('/enviar', { method: 'POST', corpo: { arroba: a, link: link.value, quando: quando, site: form.site.value } }).then(function (r) {
+          guardar('desafio-arroba', a);
+          buscada = a;
+          Array.prototype.forEach.call(campos, function (el) { el.hidden = true; });
+          $('#enviado-numeros').innerHTML = r.eu ? numerosHtml(r.eu) : '';
+          enviado.hidden = false;
+          var busca = $('#busca-arroba'); if (!busca.value) busca.value = '@' + a;
+        }).catch(function (err) {
+          mostrarErro(err.campo, err.message || 'Não deu pra mandar agora. Confere a internet e tenta de novo.');
+        }).then(function () {
+          botao.disabled = false;
+          textoBotao.textContent = 'Mandar meu post';
+        });
+      });
+
+      $('#outro-post').addEventListener('click', function () {
+        enviado.hidden = true;
+        Array.prototype.forEach.call(campos, function (el) { el.hidden = false; });
+        link.value = '';
+        link.focus();
+      });
+    });
+
+    // ===== Mural (só carrega quando chega perto) =====
+    seguro('mural', function () {
+      var grade = $('#mural-grade');
+      var mais = $('#mural-mais');
+      var proximo = null;
+      var NOMES = { post: 'Post', reels: 'Reels', story: 'Story' };
+      var contador = 0;
+      function tile(p) {
+        return '<li class="tile tile--' + (contador++ % 5) + '"><a href="' + esc(p.l) + '" target="_blank" rel="noopener">' +
+          '<span class="tile__topo"><span class="tile__tipo">' + (NOMES[p.t] || 'Post') + '</span><span>' + dataCurta(p.d) + '</span></span>' +
+          '<strong class="tile__nome">@' + esc(p.a) + '</strong>' +
+          '<span class="tile__ver">Ver no Instagram' + icone('i-abrir') + '</span></a></li>';
+      }
+      function carregar(antes) {
+        mais.disabled = true;
+        return api('/mural' + (antes ? '?antes=' + encodeURIComponent(antes) : '')).then(function (r) {
+          if (!antes && !r.posts.length) grade.innerHTML = '<li class="mural__vazio">Os primeiros posts aprovados aparecem aqui.</li>';
+          else grade.insertAdjacentHTML('beforeend', r.posts.map(tile).join(''));
+          proximo = r.proximo;
+          mais.hidden = !proximo;
+        }).catch(function () {
+          if (!antes) grade.innerHTML = '<li class="mural__vazio">Não deu pra carregar o mural agora.</li>';
+        }).then(function () { mais.disabled = false; });
+      }
+      mais.addEventListener('click', function () { if (proximo) carregar(proximo); });
+      var secao = $('#mural');
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (es) {
+          if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); carregar(null); }
+        }, { rootMargin: '600px 0px' });
+        io.observe(secao);
+      } else carregar(null);
+    });
+
+    // ===== Blocos surgem ao entrar na tela (mesmo código da captação) =====
+    seguro('revela', function () {
+      var alvos = document.querySelectorAll('.revela');
+      if (reduzir || !('IntersectionObserver' in window)) {
+        Array.prototype.forEach.call(alvos, function (el) { el.classList.add('visivel'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('visivel'); io.unobserve(e.target); } });
+      }, { threshold: .12, rootMargin: '0px 0px -6% 0px' });
+      Array.prototype.forEach.call(alvos, function (el) { io.observe(el); });
+    });
+  })();
+</script>
+</body>
+</html>

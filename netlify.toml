@@ -1,0 +1,4 @@
+# Netlify: publica só a pasta public. A API e o banco continuam no Cloudflare (desafio-asfit.pages.dev),
+# e a página já chama lá sozinha. O painel da equipe (/equipe) manda para o endereço do Cloudflare.
+[build]
+  publish = "public"

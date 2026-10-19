@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equipe · Desafio do Engajamento</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#873A4A">
+<meta name="color-scheme" content="light">
+<script>
+  // O painel só funciona no endereço do Cloudflare, onde ficam a API e o login. Em outro domínio (Netlify), vai para lá.
+  if (!/(^|\.)desafio-asfit\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)) location.replace('https://desafio-asfit.pages.dev/equipe/');
+</script>
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="apple-touch-icon" href="../img/apple-touch-icon.png">
+<link rel="preload" href="../fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  @font-face { font-family: "Figtree"; src: url(../fonts/figtree-latin.woff2) format("woff2"); font-weight: 300 900; font-display: swap; }
+  :root {
+    --creme: #F7F3E8; --papel: #FFFCF5; --vinho: #873A4A; --vinho-escuro: #6E2E3C; --amarelo: #FEE179;
+    --terracota: #CA6839; --marrom: #623B1E; --marrom-apoio: #76543A; --creme-apoio: #ECE0D8;
+    --linha: rgba(98, 59, 30, .16); --erro: #A63D27; --verde: #3F6B3A;
+    --fonte: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body { margin: 0; background: var(--creme); color: var(--marrom); font-family: var(--fonte); font-size: 16px; font-weight: 400; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, p, ul, ol { margin: 0; padding: 0; }
+  ul, ol { list-style: none; }
+  h1, h2, h3 { font-weight: 500; letter-spacing: -.01em; line-height: 1.15; }
+  a { color: var(--vinho); }
+  button, input, select { font: inherit; color: inherit; }
+  button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  :focus-visible { outline: 3px solid var(--terracota); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .icone { width: 1em; height: 1em; fill: currentColor; flex: none; }
+
+  .botao { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--vinho); color: var(--creme); font-weight: 600; text-decoration: none; cursor: pointer; white-space: nowrap; }
+  .botao:hover { background: #7A3242; }
+  .botao[disabled] { opacity: .55; cursor: not-allowed; }
+  .botao--claro { background: var(--papel); color: var(--vinho); box-shadow: inset 0 0 0 1.5px rgba(135, 58, 74, .4); }
+  .botao--claro:hover { background: #F6EFE6; }
+  .botao--verde { background: var(--verde); }
+  .botao--verde:hover { background: #335830; }
+  .botao--pequeno { min-height: 36px; padding: 0 14px; font-size: 14px; }
+  .campo { display: grid; gap: 4px; font-size: 14px; font-weight: 500; color: var(--marrom-apoio); }
+  .campo input, .campo select, select.escolha, input.texto { height: 46px; padding: 0 14px; border: 1.5px solid rgba(98, 59, 30, .3); border-radius: 12px; background: var(--papel); font-size: 16px; font-weight: 400; color: var(--marrom); min-width: 0; }
+  .campo input:focus, select:focus, input.texto:focus { outline: none; border-color: var(--vinho); box-shadow: 0 0 0 3px rgba(135, 58, 74, .14); }
+  .msg { font-size: 14px; font-weight: 500; color: var(--erro); }
+  .msg:empty { display: none; }
+  .msg--ok { color: var(--verde); }
+
+  /* Login */
+  .login { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+  .login form { width: min(400px, 100%); display: grid; gap: 14px; padding: 26px 20px; border-radius: 24px; background: var(--papel); box-shadow: 0 30px 60px -40px rgba(98, 59, 30, .7); }
+  .login img { width: 150px; justify-self: center; margin-bottom: 4px; }
+  .login h1 { font-size: 22px; text-align: center; }
+  .login p { font-size: 14px; color: var(--marrom-apoio); text-align: center; }
+
+  /* Cabeçalho */
+  .cab { position: sticky; top: 0; z-index: 5; background: var(--vinho); color: var(--creme); }
+  .cab__linha { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 980px; margin: 0 auto; padding: 12px 16px 8px; }
+  .cab h1 { font-size: 17px; }
+  .cab h1 small { display: block; font-size: 13px; font-weight: 400; color: var(--creme-apoio); }
+  .cab__acoes { display: flex; gap: 8px; align-items: center; }
+  .cab .botao--claro { background: transparent; color: var(--creme); box-shadow: inset 0 0 0 1.5px rgba(247, 243, 232, .45); }
+  .abas { display: flex; gap: 4px; max-width: 980px; margin: 0 auto; padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
+  .abas button { flex: none; min-height: 44px; padding: 0 14px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--creme-apoio); font-weight: 600; cursor: pointer; }
+  .abas button[aria-selected="true"] { color: var(--creme); border-bottom-color: var(--amarelo); }
+  .abas .conta { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--amarelo); color: var(--vinho); font-size: 12.5px; }
+
+  main { max-width: 980px; margin: 0 auto; padding: 16px 16px 80px; }
+  .barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .barra .info { font-size: 14px; color: var(--marrom-apoio); }
+  .barra label.tudo { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+  .vazio { padding: 30px 16px; border-radius: 18px; border: 1px dashed rgba(98, 59, 30, .3); text-align: center; color: var(--marrom-apoio); }
+
+  /* Cartão de post para aprovar */
+  .post { display: grid; gap: 10px; padding: 14px; border-radius: 18px; background: var(--papel); border: 1px solid var(--linha); margin-bottom: 10px; }
+  .post--story { border-color: rgba(202, 104, 57, .55); box-shadow: inset 4px 0 0 var(--terracota); }
+  .post__topo { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 10px; }
+  .post__topo input[type="checkbox"] { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--vinho); }
+  .post__quem { min-width: 0; }
+  .post__quem a { font-weight: 600; font-size: 17px; text-decoration: none; overflow-wrap: anywhere; }
+  .post__quem small { display: block; font-size: 13px; color: var(--marrom-apoio); }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; background: var(--creme-apoio); color: var(--vinho); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+  .chip--story { background: var(--terracota); color: var(--creme); }
+  .chip--aprovado { background: #DCE8D6; color: var(--verde); }
+  .chip--recusado { background: #F2D9D2; color: var(--erro); }
+  .chip--pendente { background: #FBEFC0; color: var(--marrom); }
+  .post__meio { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 14px; color: var(--marrom-apoio); }
+  .post__meio select { height: 38px; padding: 0 10px; border: 1.5px solid rgba(98, 59, 30, .3); border-radius: 10px; background: var(--papel); font-size: 15px; }
+  .post__aviso { font-size: 13.5px; color: var(--terracota); font-weight: 500; }
+  .post__acoes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr); gap: 8px; }
+  .post__acoes .botao { min-height: 46px; padding: 0 10px; }
+  .botao--recusar { background: var(--papel); color: var(--erro); box-shadow: inset 0 0 0 1.5px rgba(166, 61, 39, .5); }
+  .botao--recusar:hover, .botao--recusar[aria-expanded="true"] { background: #FBEDE8; }
+  .motivos { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 2px; }
+  .motivos .botao { min-height: 38px; font-size: 14px; }
+  .motivos .info { width: 100%; font-size: 13.5px; font-weight: 500; color: var(--marrom-apoio); }
+  .post--saindo { opacity: 0; transform: translateX(16px); transition: opacity .25s ease, transform .25s ease; }
+
+  /* Participantes */
+  .busca { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 12px; }
+  .tabela { display: grid; gap: 6px; }
+  .pessoa { border-radius: 14px; background: var(--papel); border: 1px solid var(--linha); }
+  .pessoa > button { width: 100%; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; border: 0; background: none; text-align: left; cursor: pointer; }
+  .pessoa__pos { font-weight: 600; color: var(--marrom-apoio); text-align: center; }
+  .pessoa__nome { min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .pessoa__nome small { display: block; font-weight: 400; font-size: 13px; color: var(--marrom-apoio); }
+  .pessoa__pts { text-align: right; font-size: 13px; color: var(--marrom-apoio); }
+  .pessoa__pts b { display: block; font-size: 20px; font-weight: 500; color: var(--vinho); line-height: 1; }
+  .pessoa--bloqueada { opacity: .6; }
+  .detalhe { display: grid; gap: 14px; padding: 4px 12px 14px; border-top: 1px solid var(--linha); }
+  .detalhe h3 { font-size: 15px; margin-top: 10px; }
+  .item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 0; border-bottom: 1px solid var(--linha); font-size: 14px; }
+  .item:last-child { border-bottom: 0; }
+  .item .acoes { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .extras-form { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 8px; }
+  .extras-form .botao { grid-column: 1 / -1; }
+  .fogo { color: var(--terracota); }
+
+  .historico li { padding: 10px 0; border-bottom: 1px solid var(--linha); font-size: 14px; }
+  .historico small { color: var(--marrom-apoio); }
+
+  .aviso-flutuante { position: fixed; left: 50%; bottom: 18px; z-index: 20; transform: translateX(-50%); padding: 12px 18px; border-radius: 999px; background: var(--marrom); color: var(--creme); font-size: 14.5px; font-weight: 500; box-shadow: 0 16px 30px -16px rgba(0, 0, 0, .5); max-width: calc(100% - 32px); text-align: center; }
+
+  @media (min-width: 700px) {
+    .post { grid-template-columns: minmax(0, 1fr) 330px; align-items: center; }
+    .post__topo, .post__meio, .post__aviso, .motivos { grid-column: 1; }
+    .post__acoes { grid-column: 2; grid-row: 1 / span 3; }
+  }
+  @media (prefers-reduced-motion: reduce) { .post--saindo { transition: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-abrir" viewBox="0 0 256 256"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"/></symbol>
+  <symbol id="i-fogo" viewBox="0 0 256 256"><path d="M143.38,17.85a8,8,0,0,0-12.63,3.41l-22,60.41L84.59,58.26a8,8,0,0,0-11.93.89C51,87.53,40,116.08,40,144a88,88,0,0,0,176,0C216,84.55,165.21,36,143.38,17.85Zm40.51,135.49a57.6,57.6,0,0,1-46.56,46.55A7.65,7.65,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z"/></symbol>
+</svg>
+
+<!-- ===== Login ===== -->
+<section class="login" id="tela-login" hidden>
+  <form id="form-login" novalidate>
+    <img src="../img/logo-terracota-336.webp" alt="ASFIT" width="336" height="70">
+    <h1>Desafio do Engajamento</h1>
+    <p>Painel da equipe: aprovar os posts e dar pontos extras.</p>
+    <label class="campo">E-mail<input id="login-email" type="email" autocomplete="username" inputmode="email" autocapitalize="off" required></label>
+    <label class="campo">Senha<input id="login-senha" type="password" autocomplete="current-password" required></label>
+    <button class="botao" type="submit">Entrar</button>
+    <p class="msg" id="login-msg" role="alert"></p>
+  </form>
+</section>
+
+<!-- ===== Painel ===== -->
+<div id="tela-painel" hidden>
+  <header class="cab">
+    <div class="cab__linha">
+      <h1>Desafio do Engajamento<small id="quem"></small></h1>
+      <div class="cab__acoes">
+        <a class="botao botao--claro botao--pequeno" href="/api/equipe/ranking.csv">Baixar ranking</a>
+        <button class="botao botao--claro botao--pequeno" type="button" id="sair">Sair</button>
+      </div>
+    </div>
+    <nav class="abas" role="tablist">
+      <button role="tab" aria-selected="true" data-aba="aprovar">Para aprovar<span class="conta" id="conta-pendentes">0</span></button>
+      <button role="tab" aria-selected="false" data-aba="participantes">Participantes</button>
+      <button role="tab" aria-selected="false" data-aba="posts">Posts revisados</button>
+      <button role="tab" aria-selected="false" data-aba="historico">Histórico</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Para aprovar -->
+    <section data-painel="aprovar">
+      <div class="barra">
+        <label class="tudo"><input type="checkbox" id="marcar-todos"> Marcar todos</label>
+        <button class="botao botao--verde botao--pequeno" type="button" id="aprovar-marcados" disabled>Aprovar marcados</button>
+        <button class="botao botao--claro botao--pequeno" type="button" id="atualizar">Atualizar</button>
+        <span class="info" id="info-pendentes"></span>
+      </div>
+      <div id="lista-pendentes"></div>
+    </section>
+
+    <!-- Participantes -->
+    <section data-painel="participantes" hidden>
+      <form class="busca" id="form-busca" role="search">
+        <input class="texto" id="busca" type="search" placeholder="Buscar @…" aria-label="Buscar @" autocapitalize="off" autocomplete="off">
+        <button class="botao botao--pequeno" type="submit">Buscar</button>
+      </form>
+      <ol class="tabela" id="lista-participantes"></ol>
+      <div class="barra" style="margin-top:12px"><button class="botao botao--claro botao--pequeno" type="button" id="mais-participantes" hidden>Ver mais</button></div>
+    </section>
+
+    <!-- Posts revisados -->
+    <section data-painel="posts" hidden>
+      <form class="busca" id="form-posts" role="search" style="grid-template-columns: auto minmax(0,1fr) auto">
+        <select class="escolha" id="posts-status" aria-label="Situação">
+          <option value="aprovado">Aprovados</option>
+          <option value="recusado">Recusados</option>
+        </select>
+        <input class="texto" id="posts-busca" type="search" placeholder="Buscar @…" autocomplete="off" aria-label="Buscar @" autocapitalize="off">
+        <button class="botao botao--pequeno" type="submit">Buscar</button>
+      </form>
+      <div id="lista-posts"></div>
+      <div class="barra" style="margin-top:12px"><button class="botao botao--claro botao--pequeno" type="button" id="mais-posts" hidden>Ver mais</button></div>
+    </section>
+
+    <!-- Histórico -->
+    <section data-painel="historico" hidden>
+      <ol class="historico" id="lista-historico"></ol>
+    </section>
+  </main>
+</div>
+
+<p class="aviso-flutuante" id="aviso" role="status" hidden></p>
+
+<script>
+  (function () {
+    var MOTIVOS = ['Perfil fechado', 'Não marcou a ASFIT', 'Link não abre', 'Post repetido', 'Não é do desafio', 'Outro motivo'];
+    var NOMES = { post: 'Post', reels: 'Reels', story: 'Story' };
+    var STATUS = { aprovado: 'Aprovado', recusado: 'Recusado', pendente: 'Em análise' };
+    var estado = { inicio: '2026-10-16', fim: '2026-11-11', hoje: '' };
+
+    function $(s, el) { return (el || document).querySelector(s); }
+    function $$(s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); }
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function dataCurta(iso) { var p = String(iso).split('-'); return p[2] + '/' + p[1]; }
+    function hora(ms) { return new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+    function icone(id) { return '<svg class="icone" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
+    function somarDias(dia, n) { var d = new Date(dia + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+
+    var avisoTimer;
+    function avisar(texto) {
+      var el = $('#aviso');
+      el.textContent = texto; el.hidden = false;
+      clearTimeout(avisoTimer); avisoTimer = setTimeout(function () { el.hidden = true; }, 2600);
+    }
+
+    function api(caminho, opcoes) {
+      opcoes = opcoes || {};
+      var cfg = { method: opcoes.method || 'GET', headers: {}, credentials: 'same-origin' };
+      if (opcoes.corpo) { cfg.headers['content-type'] = 'application/json'; cfg.body = JSON.stringify(opcoes.corpo); }
+      return fetch('/api/equipe/' + caminho, cfg).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) {
+          if (r.status === 401 && caminho !== 'entrar') { mostrarLogin(); }
+          if (!r.ok) throw new Error(d.erro || 'Não deu certo. Tenta de novo.');
+          return d;
+        });
+      });
+    }
+
+    // ===== Login =====
+    function mostrarLogin() { $('#tela-painel').hidden = true; $('#tela-login').hidden = false; }
+    function mostrarPainel(eu) {
+      $('#quem').textContent = 'Entrou como ' + eu.nome;
+      $('#tela-login').hidden = true; $('#tela-painel').hidden = false;
+      carregarPendentes();
+    }
+    $('#form-login').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = $('#login-msg'); msg.textContent = '';
+      var botao = $('#form-login button'); botao.disabled = true;
+      api('entrar', { method: 'POST', corpo: { email: $('#login-email').value, senha: $('#login-senha').value } })
+        .then(mostrarPainel).catch(function (err) { msg.textContent = err.message; })
+        .then(function () { botao.disabled = false; });
+    });
+    $('#sair').addEventListener('click', function () { api('sair', { method: 'POST' }).then(mostrarLogin, mostrarLogin); });
+
+    // ===== Abas =====
+    $$('.abas button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        $$('.abas button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+        $$('[data-painel]').forEach(function (s) { s.hidden = s.getAttribute('data-painel') !== b.getAttribute('data-aba'); });
+        var aba = b.getAttribute('data-aba');
+        if (aba === 'aprovar') carregarPendentes();
+        if (aba === 'participantes') carregarParticipantes(true);
+        if (aba === 'posts') carregarPosts(true);
+        if (aba === 'historico') carregarHistorico();
+      });
+    });
+
+    function opcoesDias(atual) {
+      var html = '', ultimo = estado.hoje && estado.hoje < estado.fim ? estado.hoje : estado.fim;
+      for (var d = estado.inicio; d <= ultimo; d = somarDias(d, 1)) html += '<option value="' + d + '"' + (d === atual ? ' selected' : '') + '>' + dataCurta(d) + '</option>';
+      if (atual > ultimo) html += '<option value="' + atual + '" selected>' + dataCurta(atual) + '</option>';
+      return html;
+    }
+    function botoesMotivo() {
+      return MOTIVOS.map(function (m) { return '<button class="botao botao--claro" type="button" data-motivo="' + esc(m) + '">' + esc(m) + '</button>'; }).join('') +
+        '<button class="botao botao--claro" type="button" data-motivo="">Cancelar</button>';
+    }
+    function atualizarResumo(r) {
+      if (!r) return;
+      $('#conta-pendentes').textContent = r.pendentes;
+      $('#info-pendentes').textContent = r.pendentes + ' para aprovar' + (r.stories ? ', ' + r.stories + (r.stories === 1 ? ' é story' : ' são stories') : '') + '. ' + r.no_ranking + ' no ranking.';
+    }
+
+    // ===== Para aprovar =====
+    function cartaoPendente(p) {
+      var story = p.tipo === 'story';
+      var velho = story && Date.now() - p.enviado_em > 20 * 3600000;
+      return '<article class="post' + (story ? ' post--story' : '') + '" data-id="' + p.id + '">' +
+        '<div class="post__topo"><input type="checkbox" class="marca" aria-label="Marcar @' + esc(p.arroba) + '">' +
+          '<div class="post__quem"><a href="https://www.instagram.com/' + esc(p.arroba) + '/" target="_blank" rel="noopener">@' + esc(p.arroba) + '</a>' +
+          '<small>' + p.pontos + ' pontos, ' + p.dias + (p.dias === 1 ? ' dia' : ' dias') + ' com post</small></div>' +
+          '<span class="chip' + (story ? ' chip--story' : '') + '">' + (NOMES[p.tipo] || 'Post') + '</span></div>' +
+        '<div class="post__meio"><label>Conta no dia <select class="dia" aria-label="Dia que o post conta">' + opcoesDias(p.dia) + '</select></label>' +
+          '<span>Mandou ' + hora(p.enviado_em) + '</span></div>' +
+        (story ? '<p class="post__aviso">' + (velho ? 'Story mandado há mais de 20 horas: pode já ter sumido.' : 'Story some em 24 horas: confere logo.') + '</p>' : '') +
+        (p.dia_ja_conta ? '<p class="post__aviso">Esse dia já conta ponto pra ela. Aprovar só põe no mural.</p>' : '') +
+        '<div class="post__acoes"><a class="botao botao--claro" href="' + esc(p.link) + '" target="_blank" rel="noopener">Abrir ' + icone('i-abrir') + '</a>' +
+          '<button class="botao botao--recusar recusar" type="button" aria-expanded="false">Recusar</button>' +
+          '<button class="botao botao--verde aprovar" type="button">Aprovar</button></div>' +
+        '<div class="motivos" hidden><span class="info">Motivo (a participante vê):</span>' + botoesMotivo() + '</div>' +
+        '</article>';
+    }
+
+    function carregarPendentes() {
+      var caixa = $('#lista-pendentes');
+      return api('pendentes').then(function (r) {
+        estado.hoje = r.hoje; estado.inicio = r.inicio; estado.fim = r.fim;
+        atualizarResumo(r.resumo);
+        caixa.innerHTML = r.posts.length ? r.posts.map(cartaoPendente).join('') : '<p class="vazio">Nada para aprovar agora.</p>';
+        $('#marcar-todos').checked = false;
+        contarMarcados();
+      }).catch(function (err) { caixa.innerHTML = '<p class="vazio">' + esc(err.message) + '</p>'; });
+    }
+
+    function contarMarcados() {
+      var n = $$('#lista-pendentes .marca:checked').length;
+      var b = $('#aprovar-marcados');
+      b.disabled = !n;
+      b.textContent = n ? 'Aprovar marcados (' + n + ')' : 'Aprovar marcados';
+    }
+
+    function revisar(ids, acao, extra) {
+      var corpo = { ids: ids, acao: acao };
+      if (extra) for (var k in extra) corpo[k] = extra[k];
+      return api('revisar', { method: 'POST', corpo: corpo }).then(function (r) { atualizarResumo(r.resumo); return r; });
+    }
+
+    function tirarCartoes(ids) {
+      ids.forEach(function (id) {
+        var el = $('#lista-pendentes .post[data-id="' + id + '"]');
+        if (!el) return;
+        el.classList.add('post--saindo');
+        setTimeout(function () { el.remove(); if (!$('#lista-pendentes .post')) carregarPendentes(); }, 260);
+      });
+      setTimeout(contarMarcados, 280);
+    }
+
+    $('#lista-pendentes').addEventListener('change', function (e) {
+      if (e.target.classList.contains('marca')) contarMarcados();
+    });
+    $('#lista-pendentes').addEventListener('click', function (e) {
+      var abre = e.target.closest('.recusar');
+      if (abre) {
+        var caixa = $('.motivos', abre.closest('.post'));
+        caixa.hidden = !caixa.hidden;
+        abre.setAttribute('aria-expanded', caixa.hidden ? 'false' : 'true');
+        if (!caixa.hidden) $('button', caixa).focus();
+        return;
+      }
+      var escolha = e.target.closest('[data-motivo]');
+      if (escolha) {
+        var cartaoM = escolha.closest('.post');
+        var motivo = escolha.getAttribute('data-motivo');
+        if (!motivo) { $('.motivos', cartaoM).hidden = true; $('.recusar', cartaoM).setAttribute('aria-expanded', 'false'); return; }
+        if (motivo === 'Outro motivo') {
+          motivo = (prompt('Qual o motivo? (a participante vê esse texto)') || '').trim();
+          if (!motivo) return;
+        }
+        var idM = Number(cartaoM.getAttribute('data-id'));
+        $$('button', cartaoM).forEach(function (x) { x.disabled = true; });
+        revisar([idM], 'recusar', { motivo: motivo }).then(function () { avisar('Recusado: ' + motivo); tirarCartoes([idM]); })
+          .catch(function (err) { avisar(err.message); $$('button', cartaoM).forEach(function (x) { x.disabled = false; }); });
+        return;
+      }
+      var b = e.target.closest('.aprovar');
+      if (!b) return;
+      var cartao = b.closest('.post');
+      var id = Number(cartao.getAttribute('data-id'));
+      b.disabled = true;
+      revisar([id], 'aprovar', { dia: $('.dia', cartao).value }).then(function () { avisar('Aprovado'); tirarCartoes([id]); })
+        .catch(function (err) { avisar(err.message); b.disabled = false; });
+    });
+    $('#marcar-todos').addEventListener('change', function (e) {
+      $$('#lista-pendentes .marca').forEach(function (c) { c.checked = e.target.checked; });
+      contarMarcados();
+    });
+    $('#aprovar-marcados').addEventListener('click', function () {
+      var cartoes = $$('#lista-pendentes .marca:checked').map(function (c) { return c.closest('.post'); });
+      if (!cartoes.length) return;
+      if (!confirm('Aprovar ' + cartoes.length + (cartoes.length === 1 ? ' post?' : ' posts?') + ' Confere se abriu cada um antes.')) return;
+      // cada post vai com o dia escolhido no cartão: agrupa por dia
+      var porDia = {};
+      cartoes.forEach(function (c) { var d = $('.dia', c).value; (porDia[d] = porDia[d] || []).push(Number(c.getAttribute('data-id'))); });
+      var botao = $('#aprovar-marcados'); botao.disabled = true;
+      var fila = Object.keys(porDia).reduce(function (p, d) {
+        return p.then(function () { return revisar(porDia[d], 'aprovar', { dia: d }).then(function () { tirarCartoes(porDia[d]); }); });
+      }, Promise.resolve());
+      fila.then(function () { avisar(cartoes.length + (cartoes.length === 1 ? ' aprovado' : ' aprovados')); })
+        .catch(function (err) { avisar(err.message); carregarPendentes(); });
+    });
+    $('#atualizar').addEventListener('click', carregarPendentes);
+
+    // ===== Participantes =====
+    var paginaPart = 0;
+    function linhaPessoa(p, pos) {
+      return '<li class="pessoa' + (p.bloqueada ? ' pessoa--bloqueada' : '') + '" data-arroba="' + esc(p.arroba) + '">' +
+        '<button type="button" aria-expanded="false"><span class="pessoa__pos">' + (p.bloqueada ? '–' : (p.pontos > 0 ? pos + 'º' : '–')) + '</span>' +
+        '<span class="pessoa__nome">@' + esc(p.arroba) + (p.todo_dia ? ' <span class="fogo" title="Postou todos os dias até agora">' + icone('i-fogo') + '</span>' : '') +
+        '<small>' + p.dias + (p.dias === 1 ? ' dia' : ' dias') + ', ' + (p.extras > 0 ? '+' : '') + p.extras + ' extras' + (p.pendentes ? ', ' + p.pendentes + ' em análise' : '') + (p.bloqueada ? ', fora do ranking' : '') + '</small></span>' +
+        '<span class="pessoa__pts"><b>' + p.pontos + '</b>pontos</span></button>' +
+        '<div class="detalhe" hidden></div></li>';
+    }
+    function carregarParticipantes(doZero) {
+      if (doZero) { paginaPart = 0; $('#lista-participantes').innerHTML = ''; }
+      var busca = $('#busca').value.trim();
+      return api('participantes?pagina=' + paginaPart + '&busca=' + encodeURIComponent(busca)).then(function (r) {
+        var base = paginaPart * 50;
+        var html = r.participantes.map(function (p, i) { return linhaPessoa(p, base + i + 1); }).join('');
+        if (doZero && !html) html = '<li class="vazio">' + (busca ? 'Nenhum @ com "' + esc(busca) + '".' : 'Ninguém mandou post ainda.') + '</li>';
+        $('#lista-participantes').insertAdjacentHTML('beforeend', html);
+        $('#mais-participantes').hidden = !r.mais;
+      }).catch(function (err) { avisar(err.message); });
+    }
+    $('#form-busca').addEventListener('submit', function (e) { e.preventDefault(); carregarParticipantes(true); });
+    $('#mais-participantes').addEventListener('click', function () { paginaPart++; carregarParticipantes(false); });
+
+    function detalheHtml(d) {
+      var posts = d.posts.map(function (p) {
+        return '<div class="item" data-id="' + p.id + '"><span class="chip chip--' + p.status + '">' + STATUS[p.status] + '</span>' +
+          '<span>' + (NOMES[p.tipo] || 'Post') + ' de ' + dataCurta(p.dia) + '</span>' +
+          '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">abrir</a>' +
+          (p.motivo ? '<small>(' + esc(p.motivo) + ')</small>' : '') +
+          '<span class="acoes">' +
+            (p.status !== 'aprovado' ? '<button class="botao botao--verde botao--pequeno" data-acao="aprovar">Aprovar</button>' : '') +
+            (p.status !== 'pendente' ? '<button class="botao botao--claro botao--pequeno" data-acao="pendente">Voltar pra análise</button>' : '') +
+            (p.status !== 'recusado' ? '<button class="botao botao--claro botao--pequeno" data-acao="recusar">Recusar</button>' : '') +
+          '</span></div>';
+      }).join('') || '<p class="vazio">Sem posts.</p>';
+      var extras = d.lista_extras.map(function (x) {
+        return '<div class="item"><b>' + (x.pontos > 0 ? '+' : '') + x.pontos + '</b><span>' + esc(x.motivo) + '</span><small>' + esc(x.por) + ', ' + hora(x.criado_em) + '</small>' +
+          '<span class="acoes"><button class="botao botao--claro botao--pequeno" data-desfazer="' + x.id + '">Desfazer</button></span></div>';
+      }).join('');
+      return '<p>' + (d.posicao ? d.posicao + 'º lugar, ' : '') + d.pontos + ' pontos: ' + d.dias + ' dias com post + ' + d.extras + ' extras.' +
+          (d.todo_dia ? ' <span class="fogo">' + icone('i-fogo') + ' Postou todos os dias até agora.</span>' : '') + '</p>' +
+        '<h3>Dar pontos extras</h3>' +
+        '<form class="extras-form"><select class="escolha" name="pontos" aria-label="Pontos"><option>1</option><option>2</option><option>3</option><option>5</option><option>-1</option><option>-2</option><option>-5</option></select>' +
+          '<select class="escolha" name="motivo" aria-label="Motivo"><option>Comentou</option><option>Compartilhou</option><option>Chamou as amigas</option><option>Outro</option></select>' +
+          '<button class="botao botao--pequeno" type="submit">Dar pontos</button></form>' +
+        (extras ? '<h3>Pontos extras dados</h3><div>' + extras + '</div>' : '') +
+        '<h3>Posts</h3><div>' + posts + '</div>' +
+        '<div><button class="botao botao--claro botao--pequeno" data-bloquear="' + (d.bloqueada ? '0' : '1') + '">' + (d.bloqueada ? 'Voltar pro ranking' : 'Tirar do ranking') + '</button></div>';
+    }
+    function abrirDetalhe(li, forcar) {
+      var caixa = $('.detalhe', li);
+      var botao = $('button', li);
+      if (!forcar && !caixa.hidden) { caixa.hidden = true; botao.setAttribute('aria-expanded', 'false'); return; }
+      return api('participante?arroba=' + encodeURIComponent(li.getAttribute('data-arroba'))).then(function (d) {
+        caixa.innerHTML = detalheHtml(d); caixa.hidden = false; botao.setAttribute('aria-expanded', 'true');
+      }).catch(function (err) { avisar(err.message); });
+    }
+    function trocarResumoLinha(li, d) {
+      var pos = $('.pessoa__pos', li); var pts = $('.pessoa__pts b', li);
+      pts.textContent = d.pontos;
+      $('.pessoa__nome small', li).textContent = d.dias + (d.dias === 1 ? ' dia' : ' dias') + ', ' + (d.extras > 0 ? '+' : '') + d.extras + ' extras' + (d.pendentes ? ', ' + d.pendentes + ' em análise' : '') + (d.bloqueada ? ', fora do ranking' : '');
+      pos.textContent = d.bloqueada || !d.posicao ? '–' : d.posicao + 'º';
+    }
+    $('#lista-participantes').addEventListener('click', function (e) {
+      var li = e.target.closest('.pessoa');
+      if (!li) return;
+      if (e.target.closest('.pessoa > button')) return abrirDetalhe(li);
+      var acao = e.target.closest('[data-acao]');
+      if (acao) {
+        var item = acao.closest('.item');
+        var tipo = acao.getAttribute('data-acao');
+        var extra = null;
+        if (tipo === 'recusar') {
+          var m = (prompt('Motivo da recusa (a participante vê):', 'Perfil fechado') || '').trim();
+          if (!m) return;
+          extra = { motivo: m };
+        }
+        acao.disabled = true;
+        return revisar([Number(item.getAttribute('data-id'))], tipo, extra).then(function () { avisar('Feito'); return abrirDetalhe(li, true); })
+          .catch(function (err) { avisar(err.message); acao.disabled = false; });
+      }
+      var desfazer = e.target.closest('[data-desfazer]');
+      if (desfazer) {
+        desfazer.disabled = true;
+        return api('extras/' + desfazer.getAttribute('data-desfazer'), { method: 'DELETE' }).then(function (r) {
+          avisar('Pontos desfeitos'); $('.detalhe', li).innerHTML = detalheHtml(r.participante); trocarResumoLinha(li, r.participante);
+        }).catch(function (err) { avisar(err.message); desfazer.disabled = false; });
+      }
+      var bloq = e.target.closest('[data-bloquear]');
+      if (bloq) {
+        var tirar = bloq.getAttribute('data-bloquear') === '1';
+        if (tirar && !confirm('Tirar @' + li.getAttribute('data-arroba') + ' do ranking? Os posts novos dela vão ser recusados na hora.')) return;
+        return api('bloquear', { method: 'POST', corpo: { arroba: li.getAttribute('data-arroba'), bloqueada: tirar } }).then(function (r) {
+          avisar(tirar ? 'Fora do ranking' : 'De volta ao ranking'); li.classList.toggle('pessoa--bloqueada', tirar);
+          $('.detalhe', li).innerHTML = detalheHtml(r.participante); trocarResumoLinha(li, r.participante);
+        }).catch(function (err) { avisar(err.message); });
+      }
+    });
+    $('#lista-participantes').addEventListener('submit', function (e) {
+      if (!e.target.classList.contains('extras-form')) return;
+      e.preventDefault();
+      var li = e.target.closest('.pessoa');
+      var pontos = Number(e.target.pontos.value);
+      var motivo = e.target.motivo.value;
+      if (motivo === 'Outro') { motivo = (prompt('Motivo dos pontos:') || '').trim(); if (!motivo) return; }
+      var botao = $('button', e.target); botao.disabled = true;
+      api('extras', { method: 'POST', corpo: { arroba: li.getAttribute('data-arroba'), pontos: pontos, motivo: motivo } }).then(function (r) {
+        avisar((pontos > 0 ? '+' : '') + pontos + ' para @' + li.getAttribute('data-arroba'));
+        $('.detalhe', li).innerHTML = detalheHtml(r.participante); trocarResumoLinha(li, r.participante);
+      }).catch(function (err) { avisar(err.message); botao.disabled = false; });
+    });
+
+    // ===== Posts revisados =====
+    var paginaPosts = 0;
+    function linhaPost(p) {
+      return '<div class="post" data-id="' + p.id + '"><div class="post__topo"><span></span><div class="post__quem"><a href="https://www.instagram.com/' + esc(p.arroba) + '/" target="_blank" rel="noopener">@' + esc(p.arroba) + '</a>' +
+        '<small>' + (NOMES[p.tipo] || 'Post') + ' de ' + dataCurta(p.dia) + ', ' + STATUS[p.status].toLowerCase() + (p.revisado_por ? ' por ' + esc(p.revisado_por) : '') + (p.motivo ? ' (' + esc(p.motivo) + ')' : '') + '</small></div>' +
+        '<span class="chip chip--' + p.status + '">' + STATUS[p.status] + '</span></div>' +
+        '<div class="post__acoes" style="grid-template-columns: 1fr 1fr"><a class="botao botao--claro" href="' + esc(p.link) + '" target="_blank" rel="noopener">Abrir ' + icone('i-abrir') + '</a>' +
+        '<button class="botao botao--claro voltar" type="button">Voltar pra análise</button></div></div>';
+    }
+    function carregarPosts(doZero) {
+      if (doZero) { paginaPosts = 0; $('#lista-posts').innerHTML = ''; }
+      var q = 'posts?status=' + $('#posts-status').value + '&pagina=' + paginaPosts + '&busca=' + encodeURIComponent($('#posts-busca').value.trim());
+      return api(q).then(function (r) {
+        var html = r.posts.map(linhaPost).join('');
+        if (doZero && !html) html = '<p class="vazio">Nenhum post aqui.</p>';
+        $('#lista-posts').insertAdjacentHTML('beforeend', html);
+        $('#mais-posts').hidden = !r.mais;
+      }).catch(function (err) { avisar(err.message); });
+    }
+    $('#form-posts').addEventListener('submit', function (e) { e.preventDefault(); carregarPosts(true); });
+    $('#posts-status').addEventListener('change', function () { carregarPosts(true); });
+    $('#mais-posts').addEventListener('click', function () { paginaPosts++; carregarPosts(false); });
+    $('#lista-posts').addEventListener('click', function (e) {
+      var b = e.target.closest('.voltar');
+      if (!b) return;
+      var el = b.closest('.post');
+      b.disabled = true;
+      revisar([Number(el.getAttribute('data-id'))], 'pendente').then(function () { avisar('Voltou para “Para aprovar”'); el.remove(); })
+        .catch(function (err) { avisar(err.message); b.disabled = false; });
+    });
+
+    // ===== Histórico =====
+    function carregarHistorico() {
+      return api('historico').then(function (r) {
+        $('#lista-historico').innerHTML = r.acoes.map(function (a) {
+          return '<li><b>' + esc(a.por) + '</b>: ' + esc(a.acao) + ' <small>' + esc(a.detalhe) + ' · ' + hora(a.momento) + '</small></li>';
+        }).join('') || '<li class="vazio">Nada ainda.</li>';
+      }).catch(function (err) { avisar(err.message); });
+    }
+
+    // Atualiza a fila sozinho a cada 2 minutos quando a aba "Para aprovar" está aberta
+    setInterval(function () {
+      if (document.hidden || $('#tela-painel').hidden || $('[data-painel="aprovar"]').hidden) return;
+      if ($$('#lista-pendentes .marca:checked').length) return; // não mexe enquanto alguém marca
+      carregarPendentes();
+    }, 120000);
+
+    api('eu').then(function (eu) { eu ? mostrarPainel(eu) : mostrarLogin(); }).catch(mostrarLogin);
+  })();
+</script>
+</body>
+</html>
