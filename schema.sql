@@ -1,22 +1,23 @@
 -- Banco D1 "desafio-asfit" do Desafio do Engajamento.
 -- Rodar uma vez: npx wrangler d1 execute desafio-asfit --remote --file schema.sql
 
--- Uma linha por @. Os totais (dias, extras, pontos...) são recalculados a cada aprovação,
+-- Uma linha por @. Os totais (conteúdos, dias de story, extras, pontos...) são recalculados a cada aprovação,
 -- para o ranking sair de uma leitura só, sem somar os posts de todo mundo.
 CREATE TABLE IF NOT EXISTS participantes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   arroba TEXT NOT NULL UNIQUE,              -- sem @, minúsculo
   criado_em INTEGER NOT NULL,
-  dias INTEGER NOT NULL DEFAULT 0,          -- dias diferentes com post aprovado
+  conteudos INTEGER NOT NULL DEFAULT 0,     -- posts aprovados que valem ponto (carrossel e reels)
+  dias INTEGER NOT NULL DEFAULT 0,          -- dias diferentes com story aprovado (missão dos 7 dias seguidos)
   dias_lista TEXT NOT NULL DEFAULT '',      -- esses dias, "2026-10-16,2026-10-17"
-  extras INTEGER NOT NULL DEFAULT 0,        -- soma dos pontos extras
-  pontos INTEGER NOT NULL DEFAULT 0,        -- dias + extras
+  extras INTEGER NOT NULL DEFAULT 0,        -- soma dos pontos extras (o vídeo do Além do Shape entra aqui)
+  pontos INTEGER NOT NULL DEFAULT 0,        -- pontos dos posts aprovados + extras
   pendentes INTEGER NOT NULL DEFAULT 0,
   primeiro INTEGER NOT NULL DEFAULT 99999999999999, -- primeiro envio aprovado (desempate)
   bloqueada INTEGER NOT NULL DEFAULT 0,
   atualizado_em INTEGER NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS participantes_ranking ON participantes (bloqueada, pontos DESC, dias DESC, primeiro);
+CREATE INDEX IF NOT EXISTS participantes_ranking ON participantes (bloqueada, pontos DESC, primeiro);
 
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,6 +26,8 @@ CREATE TABLE IF NOT EXISTS posts (
   tipo TEXT NOT NULL,                       -- post, reels, story
   dia TEXT NOT NULL,                        -- AAAA-MM-DD, horário de Brasília
   status TEXT NOT NULL DEFAULT 'pendente',  -- pendente, aprovado, recusado
+  categoria TEXT,                           -- a que a equipe escolheu ao aprovar (CATEGORIAS na API)
+  pontos INTEGER NOT NULL DEFAULT 0,        -- pontos da categoria (story vale 0)
   enviado_em INTEGER NOT NULL,
   ip TEXT NOT NULL DEFAULT '',              -- hash do IP, só para limitar envios
   revisado_em INTEGER,

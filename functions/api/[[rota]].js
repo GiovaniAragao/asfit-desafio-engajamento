@@ -1,7 +1,10 @@
 // API do Desafio do Engajamento da Asfit (https://desafio-asfit.pages.dev).
 // - Público: ranking, mural, "ache sua posição" e envio do link do post.
 // - Equipe (e-mail e senha do segredo ADMINS): aprova ou recusa os posts e dá pontos extras.
-// Regra do ranking: cada dia com pelo menos um post aprovado vale 1 ponto, mais os pontos extras da equipe.
+// Regra do ranking (19/10/2026): cada conteúdo aprovado vale os pontos da categoria que a equipe escolhe ao aprovar
+// (carrossel em collab de antes e depois 10, reels de treino ou dieta 7, reels de autocuidado 5). O vídeo sobre o que é
+// ser Além do Shape vai direto para a equipe e entra como ponto extra (+10). Story não vale ponto: conta para a missão
+// dos 7 dias seguidos, que dá o brinde personalizado. Desempate: quem teve o primeiro post aprovado mais cedo.
 
 // Datas do desafio. Se mudarem, mudar também o CONFIG no fim do public/index.html.
 const INICIO = '2026-10-16';
@@ -15,6 +18,16 @@ const MAX_IDS = 90;                       // o D1 aceita até 100 parâmetros po
 const MIN = 60 * 1000;
 const DIAS_SESSAO = 30;
 const SEM_APROVADO = 99999999999999;
+
+// Categorias que a equipe escolhe ao aprovar. Mudou a regra: mudar aqui e na dobra "Como somar pontos" do public/index.html.
+const CATEGORIAS = {
+  carrossel: { nome: 'Carrossel em collab de antes e depois', pontos: 10 },
+  reels_treino: { nome: 'Reels de treino ou dieta', pontos: 7 },
+  reels_autocuidado: { nome: 'Reels de autocuidado', pontos: 5 },
+  story: { nome: 'Story (missão dos 7 dias)', pontos: 0 },
+};
+const SUGESTAO = { post: 'carrossel', reels: 'reels_treino', story: 'story' }; // o que já vem marcado no painel
+const DIAS_MISSAO = 7;                    // stories em dias seguidos para ganhar o brinde
 
 const enc = new TextEncoder();
 // Rotas públicas aceitam pedido de qualquer domínio, para a página funcionar hospedada fora do Cloudflare (Netlify).
@@ -34,14 +47,18 @@ function somarDias(dia, n) {
 }
 const diaValido = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d)) && d >= INICIO && d <= FIM;
 
-// Postou em todos os dias que já acabaram (o dia de hoje ainda não conta como falta)
-function todoDia(lista, hoje) {
-  if (!lista) return false;
-  const tem = new Set(lista.split(','));
-  const ate = hoje > FIM ? FIM : somarDias(hoje, -1);
-  for (let d = INICIO; d <= ate; d = somarDias(d, 1)) if (!tem.has(d)) return false;
-  return tem.size > 0;
+// Maior sequência de dias seguidos com story aprovado (a missão pede DIAS_MISSAO)
+function sequencia(lista) {
+  if (!lista) return 0;
+  let maior = 0, atual = 0, antes = '';
+  for (const d of [...new Set(lista.split(','))].sort()) {
+    atual = antes && somarDias(antes, 1) === d ? atual + 1 : 1;
+    if (atual > maior) maior = atual;
+    antes = d;
+  }
+  return maior;
 }
+const missao = lista => sequencia(lista) >= DIAS_MISSAO;
 
 // ===== @ e link =====
 
@@ -168,7 +185,7 @@ async function entrar(request, env) {
 
 // ===== Totais de cada participante =====
 
-// Recalcula dias, extras, pontos e pendentes das participantes passadas (até MAX_IDS por vez)
+// Recalcula conteúdos, dias de story, extras, pontos e pendentes das participantes passadas (até MAX_IDS por vez)
 async function recalcular(env, ids) {
   ids = [...new Set(ids)].filter(Boolean);
   for (let i = 0; i < ids.length; i += MAX_IDS) {
@@ -176,14 +193,16 @@ async function recalcular(env, ids) {
     const m = lote.map(() => '?').join(',');
     await env.DB.batch([
       env.DB.prepare(`UPDATE participantes SET
-        dias = (SELECT COUNT(DISTINCT dia) FROM posts WHERE posts.participante_id = participantes.id AND status = 'aprovado'),
-        dias_lista = COALESCE((SELECT group_concat(DISTINCT dia) FROM posts WHERE posts.participante_id = participantes.id AND status = 'aprovado'), ''),
+        conteudos = (SELECT COUNT(*) FROM posts WHERE posts.participante_id = participantes.id AND status = 'aprovado' AND posts.pontos > 0),
+        dias = (SELECT COUNT(DISTINCT dia) FROM posts WHERE posts.participante_id = participantes.id AND status = 'aprovado' AND categoria = 'story'),
+        dias_lista = COALESCE((SELECT group_concat(DISTINCT dia) FROM posts WHERE posts.participante_id = participantes.id AND status = 'aprovado' AND categoria = 'story'), ''),
         extras = (SELECT COALESCE(SUM(pontos), 0) FROM extras WHERE extras.participante_id = participantes.id),
         pendentes = (SELECT COUNT(*) FROM posts WHERE posts.participante_id = participantes.id AND status = 'pendente'),
         primeiro = COALESCE((SELECT MIN(enviado_em) FROM posts WHERE posts.participante_id = participantes.id AND status = 'aprovado'), ${SEM_APROVADO}),
         atualizado_em = ?
         WHERE id IN (${m})`).bind(Date.now(), ...lote),
-      env.DB.prepare(`UPDATE participantes SET pontos = dias + extras WHERE id IN (${m})`).bind(...lote),
+      env.DB.prepare(`UPDATE participantes SET pontos = extras + (SELECT COALESCE(SUM(posts.pontos), 0) FROM posts
+        WHERE posts.participante_id = participantes.id AND posts.status = 'aprovado') WHERE id IN (${m})`).bind(...lote),
     ]);
   }
 }
@@ -193,24 +212,25 @@ const limparCache = env => env.DB.prepare("DELETE FROM cache WHERE chave IN ('pa
 const registrar = (env, quem, acao, detalhe = '') =>
   env.DB.prepare('INSERT INTO acoes (momento, por, acao, detalhe) VALUES (?, ?, ?, ?)').bind(Date.now(), quem.nome, acao, String(detalhe).slice(0, 300)).run();
 
-const ordenarDias = lista => (lista ? lista.split(',').sort() : []);
-
 async function posicaoDe(env, p) {
   if (p.bloqueada || !(p.pontos > 0)) return null;
   const r = await env.DB.prepare(`SELECT COUNT(*) AS n FROM participantes WHERE bloqueada = 0 AND pontos > 0
-    AND (pontos > ?1 OR (pontos = ?1 AND (dias > ?2 OR (dias = ?2 AND primeiro < ?3))))`).bind(p.pontos, p.dias, p.primeiro).first();
+    AND (pontos > ?1 OR (pontos = ?1 AND primeiro < ?2))`).bind(p.pontos, p.primeiro).first();
   return r.n + 1;
 }
 
 // O que a participante vê quando busca o próprio @ ou depois de mandar um post
 async function situacao(env, arroba) {
-  const p = await env.DB.prepare('SELECT id, arroba, dias, dias_lista, extras, pontos, pendentes, primeiro, bloqueada FROM participantes WHERE arroba = ?').bind(arroba).first();
+  const p = await env.DB.prepare('SELECT id, arroba, conteudos, dias, dias_lista, extras, pontos, pendentes, primeiro, bloqueada FROM participantes WHERE arroba = ?').bind(arroba).first();
   if (!p) return { arroba, existe: false };
-  const recusados = await env.DB.prepare("SELECT dia, motivo FROM posts WHERE participante_id = ? AND status = 'recusado' ORDER BY revisado_em DESC LIMIT 3").bind(p.id).all();
+  const [recusados, aprovados] = await env.DB.batch([
+    env.DB.prepare("SELECT dia, motivo FROM posts WHERE participante_id = ? AND status = 'recusado' ORDER BY revisado_em DESC LIMIT 3").bind(p.id),
+    env.DB.prepare("SELECT COUNT(*) AS n FROM posts WHERE participante_id = ? AND status = 'aprovado'").bind(p.id),
+  ]);
   return {
     arroba: p.arroba, existe: true, posicao: await posicaoDe(env, p),
-    pontos: p.pontos, dias: p.dias, extras: p.extras, pendentes: p.pendentes,
-    todo_dia: todoDia(p.dias_lista, diaBrasilia()), dias_lista: ordenarDias(p.dias_lista),
+    pontos: p.pontos, conteudos: p.conteudos, extras: p.extras, pendentes: p.pendentes, aprovados: aprovados.results[0].n,
+    stories: p.dias, sequencia: sequencia(p.dias_lista), missao: missao(p.dias_lista), dias_missao: DIAS_MISSAO,
     recusados: recusados.results, bloqueada: !!p.bloqueada,
   };
 }
@@ -224,13 +244,13 @@ async function painel(env) {
     const v = JSON.parse(guardado.valor);
     if (v.hoje === hoje) return v;
   }
-  const r = await env.DB.prepare(`SELECT arroba, pontos, dias, dias_lista, extras FROM participantes
-    WHERE bloqueada = 0 AND pontos > 0 ORDER BY pontos DESC, dias DESC, primeiro LIMIT ${TOPO}`).all();
+  const r = await env.DB.prepare(`SELECT arroba, pontos, conteudos, dias_lista, extras FROM participantes
+    WHERE bloqueada = 0 AND pontos > 0 ORDER BY pontos DESC, primeiro LIMIT ${TOPO}`).all();
   let total = r.results.length;
   if (total >= TOPO) total = (await env.DB.prepare('SELECT COUNT(*) AS n FROM participantes WHERE bloqueada = 0 AND pontos > 0').first()).n;
   const v = {
     hoje, inicio: INICIO, fim: FIM, atualizado_em: Date.now(), participantes: total,
-    ranking: r.results.map((p, i) => ({ p: i + 1, a: p.arroba, pts: p.pontos, d: p.dias, x: p.extras, td: todoDia(p.dias_lista, hoje) ? 1 : 0 })),
+    ranking: r.results.map((p, i) => ({ p: i + 1, a: p.arroba, pts: p.pontos, c: p.conteudos, x: p.extras, m: missao(p.dias_lista) ? 1 : 0 })),
   };
   await env.DB.prepare("INSERT OR REPLACE INTO cache (chave, valor, criado_em) VALUES ('painel', ?, ?)").bind(JSON.stringify(v), Date.now()).run();
   return v;
@@ -301,7 +321,7 @@ async function enviar(request, env) {
       : erro('Esse link já foi enviado por outro perfil.', 409, { campo: 'link' });
   }
   const doDia = await env.DB.prepare('SELECT COUNT(*) AS n FROM posts WHERE participante_id = ? AND dia = ?').bind(p.id, dia).first();
-  if (doDia.n >= MAX_POR_DIA) return erro('Você já mandou bastante coisa desse dia. Cada dia conta 1 ponto, então já tá valendo!', 429);
+  if (doDia.n >= MAX_POR_DIA) return erro('Você já mandou bastante coisa desse dia. Agora é esperar a equipe conferir.', 429);
 
   try {
     await env.DB.prepare('INSERT INTO posts (participante_id, link, tipo, dia, status, enviado_em, ip) VALUES (?, ?, ?, ?, ?, ?, ?)')
@@ -324,13 +344,16 @@ async function resumo(env) {
 }
 
 async function pendentes(env) {
-  const r = await env.DB.prepare(`SELECT p.id, p.link, p.tipo, p.dia, p.enviado_em, pa.arroba, pa.dias, pa.pontos,
-      (SELECT COUNT(*) FROM posts q WHERE q.participante_id = p.participante_id AND q.dia = p.dia AND q.status = 'aprovado') AS dia_ja_conta
+  const r = await env.DB.prepare(`SELECT p.id, p.link, p.tipo, p.dia, p.enviado_em, pa.arroba, pa.conteudos, pa.pontos,
+      (SELECT COUNT(*) FROM posts q WHERE q.participante_id = p.participante_id AND q.dia = p.dia AND q.status = 'aprovado' AND q.categoria = 'story') AS story_no_dia
     FROM posts p JOIN participantes pa ON pa.id = p.participante_id
     WHERE p.status = 'pendente'
     ORDER BY CASE p.tipo WHEN 'story' THEN 0 ELSE 1 END, p.enviado_em
     LIMIT 60`).all();
-  return { posts: r.results, resumo: await resumo(env), hoje: diaBrasilia(), inicio: INICIO, fim: FIM };
+  return {
+    posts: r.results.map(p => ({ ...p, sugestao: SUGESTAO[p.tipo] || 'carrossel' })),
+    resumo: await resumo(env), hoje: diaBrasilia(), inicio: INICIO, fim: FIM, categorias: CATEGORIAS,
+  };
 }
 
 async function revisar(env, quem, corpo) {
@@ -345,10 +368,21 @@ async function revisar(env, quem, corpo) {
   } else {
     const status = { aprovar: 'aprovado', recusar: 'recusado', pendente: 'pendente' }[acao];
     if (!status) return erro('Ação inválida.');
+    if (corpo.categoria && !CATEGORIAS[corpo.categoria]) return erro('Categoria inválida.');
     const revisado = status !== 'pendente';
     const motivo = status === 'recusado' ? (String(corpo.motivo || '').trim().slice(0, 120) || null) : null;
     let sql = 'UPDATE posts SET status = ?, revisado_em = ?, revisado_por = ?, motivo = ?';
     const args = [status, revisado ? Date.now() : null, revisado ? quem.nome : null, motivo];
+    if (status !== 'aprovado') {
+      sql += ', categoria = NULL, pontos = 0';
+    } else if (corpo.categoria) {
+      sql += ', categoria = ?, pontos = ?';
+      args.push(corpo.categoria, CATEGORIAS[corpo.categoria].pontos);
+    } else {
+      // sem categoria escolhida, vale a sugestão de cada tipo de link
+      const caso = campo => 'CASE tipo ' + Object.entries(SUGESTAO).map(([tipo, c]) => `WHEN '${tipo}' THEN ${campo(c)}`).join(' ') + ` ELSE ${campo('carrossel')} END`;
+      sql += `, categoria = ${caso(c => `'${c}'`)}, pontos = ${caso(c => CATEGORIAS[c].pontos)}`;
+    }
     if (corpo.dia) {
       if (!diaValido(corpo.dia)) return erro('Dia fora do desafio.');
       sql += ', dia = ?';
@@ -358,20 +392,19 @@ async function revisar(env, quem, corpo) {
   }
   await recalcular(env, afetados);
   await limparCache(env);
-  await registrar(env, quem, acao, `${ids.length} post(s): ${ids.join(',')}${corpo.motivo ? ' | ' + corpo.motivo : ''}${corpo.dia ? ' | dia ' + corpo.dia : ''}`);
+  await registrar(env, quem, acao, `${ids.length} post(s): ${ids.join(',')}${corpo.categoria && acao === 'aprovar' ? ' | ' + CATEGORIAS[corpo.categoria].nome : ''}${corpo.motivo ? ' | ' + corpo.motivo : ''}${corpo.dia ? ' | dia ' + corpo.dia : ''}`);
   return json({ ok: true, resumo: await resumo(env) });
 }
 
 async function listarParticipantes(env, url) {
   const busca = String(url.searchParams.get('busca') || '').trim().toLowerCase().replace(/^@/, '').replace(/[%_]/g, '');
   const pagina = Math.max(0, Number(url.searchParams.get('pagina')) || 0);
-  const r = await env.DB.prepare(`SELECT arroba, pontos, dias, extras, pendentes, bloqueada, dias_lista FROM participantes
+  const r = await env.DB.prepare(`SELECT arroba, pontos, conteudos, dias, extras, pendentes, bloqueada, dias_lista FROM participantes
     WHERE (?1 = '' OR arroba LIKE ?2)
-    ORDER BY bloqueada, pontos DESC, dias DESC, primeiro, arroba LIMIT 51 OFFSET ?3`).bind(busca, `%${busca}%`, pagina * 50).all();
-  const hoje = diaBrasilia();
+    ORDER BY bloqueada, pontos DESC, primeiro, arroba LIMIT 51 OFFSET ?3`).bind(busca, `%${busca}%`, pagina * 50).all();
   return json({
-    participantes: r.results.slice(0, 50).map(p => ({ ...p, dias_lista: undefined, todo_dia: todoDia(p.dias_lista, hoje) })),
-    mais: r.results.length > 50, hoje,
+    participantes: r.results.slice(0, 50).map(p => ({ ...p, dias_lista: undefined, sequencia: sequencia(p.dias_lista), missao: missao(p.dias_lista) })),
+    mais: r.results.length > 50, hoje: diaBrasilia(),
   });
 }
 
@@ -379,13 +412,13 @@ async function detalhe(env, arroba) {
   const p = await env.DB.prepare('SELECT * FROM participantes WHERE arroba = ?').bind(arroba).first();
   if (!p) return null;
   const [posts, extras] = await env.DB.batch([
-    env.DB.prepare('SELECT id, link, tipo, dia, status, enviado_em, revisado_por, motivo FROM posts WHERE participante_id = ? ORDER BY dia DESC, enviado_em DESC').bind(p.id),
+    env.DB.prepare('SELECT id, link, tipo, dia, status, categoria, pontos, enviado_em, revisado_por, motivo FROM posts WHERE participante_id = ? ORDER BY dia DESC, enviado_em DESC').bind(p.id),
     env.DB.prepare('SELECT id, pontos, motivo, criado_em, por FROM extras WHERE participante_id = ? ORDER BY criado_em DESC').bind(p.id),
   ]);
   return {
-    arroba: p.arroba, pontos: p.pontos, dias: p.dias, extras: p.extras, pendentes: p.pendentes, bloqueada: !!p.bloqueada,
-    posicao: await posicaoDe(env, p), todo_dia: todoDia(p.dias_lista, diaBrasilia()), dias_lista: ordenarDias(p.dias_lista),
-    posts: posts.results, lista_extras: extras.results,
+    arroba: p.arroba, pontos: p.pontos, conteudos: p.conteudos, extras: p.extras, pendentes: p.pendentes, bloqueada: !!p.bloqueada,
+    posicao: await posicaoDe(env, p), stories: p.dias, sequencia: sequencia(p.dias_lista), missao: missao(p.dias_lista),
+    dias_missao: DIAS_MISSAO, posts: posts.results, lista_extras: extras.results, categorias: CATEGORIAS,
   };
 }
 
@@ -429,7 +462,7 @@ async function listarPosts(env, url) {
   const status = ['aprovado', 'recusado', 'pendente'].includes(url.searchParams.get('status')) ? url.searchParams.get('status') : 'aprovado';
   const busca = String(url.searchParams.get('busca') || '').trim().toLowerCase().replace(/^@/, '').replace(/[%_]/g, '');
   const pagina = Math.max(0, Number(url.searchParams.get('pagina')) || 0);
-  const r = await env.DB.prepare(`SELECT p.id, p.link, p.tipo, p.dia, p.status, p.enviado_em, p.revisado_por, p.motivo, pa.arroba
+  const r = await env.DB.prepare(`SELECT p.id, p.link, p.tipo, p.dia, p.status, p.categoria, p.pontos, p.enviado_em, p.revisado_por, p.motivo, pa.arroba
     FROM posts p JOIN participantes pa ON pa.id = p.participante_id
     WHERE p.status = ?1 AND (?2 = '' OR pa.arroba LIKE ?3)
     ORDER BY p.enviado_em DESC, p.id DESC LIMIT 61 OFFSET ?4`).bind(status, busca, `%${busca}%`, pagina * 60).all();
@@ -437,11 +470,11 @@ async function listarPosts(env, url) {
 }
 
 async function rankingCsv(env) {
-  const r = await env.DB.prepare(`SELECT arroba, pontos, dias, extras, dias_lista FROM participantes
-    WHERE bloqueada = 0 AND pontos > 0 ORDER BY pontos DESC, dias DESC, primeiro`).all();
+  const r = await env.DB.prepare(`SELECT arroba, pontos, conteudos, dias, extras, dias_lista FROM participantes
+    WHERE bloqueada = 0 AND (pontos > 0 OR dias > 0) ORDER BY pontos DESC, primeiro`).all();
   const hoje = diaBrasilia();
-  const linhas = [['posição', 'arroba', 'pontos', 'dias com post', 'pontos extras', 'postou todo dia', 'perfil'].join(';')];
-  r.results.forEach((p, i) => linhas.push([i + 1, '@' + p.arroba, p.pontos, p.dias, p.extras, todoDia(p.dias_lista, hoje) ? 'sim' : 'não', 'https://www.instagram.com/' + p.arroba + '/'].join(';')));
+  const linhas = [['posição', 'arroba', 'pontos', 'conteúdos aprovados', 'pontos extras', 'dias com story', 'maior sequência de stories', 'missão dos 7 dias', 'perfil'].join(';')];
+  r.results.forEach((p, i) => linhas.push([p.pontos > 0 ? i + 1 : '-', '@' + p.arroba, p.pontos, p.conteudos, p.extras, p.dias, sequencia(p.dias_lista), missao(p.dias_lista) ? 'sim' : 'não', 'https://www.instagram.com/' + p.arroba + '/'].join(';')));
   return new Response('﻿' + linhas.join('\r\n'), {
     headers: {
       'content-type': 'text/csv; charset=utf-8',

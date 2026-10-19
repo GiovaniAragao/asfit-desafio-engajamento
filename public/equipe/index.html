@@ -90,6 +90,8 @@
   .chip--pendente { background: #FBEFC0; color: var(--marrom); }
   .post__meio { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 14px; color: var(--marrom-apoio); }
   .post__meio select { height: 38px; padding: 0 10px; border: 1.5px solid rgba(98, 59, 30, .3); border-radius: 10px; background: var(--papel); font-size: 15px; }
+  .post__categoria { display: grid; gap: 4px; width: 100%; min-width: 0; }
+  .post__categoria select { width: 100%; min-width: 0; max-width: 100%; }
   .post__aviso { font-size: 13.5px; color: var(--terracota); font-weight: 500; }
   .post__acoes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr); gap: 8px; }
   .post__acoes .botao { min-height: 46px; padding: 0 10px; }
@@ -116,6 +118,7 @@
   .item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 0; border-bottom: 1px solid var(--linha); font-size: 14px; }
   .item:last-child { border-bottom: 0; }
   .item .acoes { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .item select { height: 34px; max-width: 100%; padding: 0 8px; border: 1.5px solid rgba(98, 59, 30, .3); border-radius: 10px; background: var(--papel); font-size: 14px; }
   .extras-form { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 8px; }
   .extras-form .botao { grid-column: 1 / -1; }
   .fogo { color: var(--terracota); }
@@ -219,6 +222,15 @@
   (function () {
     var MOTIVOS = ['Perfil fechado', 'Não marcou a ASFIT', 'Link não abre', 'Post repetido', 'Não é do desafio', 'Outro motivo'];
     var NOMES = { post: 'Post', reels: 'Reels', story: 'Story' };
+    // Mesmas categorias da API (ela manda as dela junto com a fila e com o detalhe de cada participante)
+    var CATEGORIAS = {
+      carrossel: { nome: 'Carrossel em collab de antes e depois', pontos: 10 },
+      reels_treino: { nome: 'Reels de treino ou dieta', pontos: 7 },
+      reels_autocuidado: { nome: 'Reels de autocuidado', pontos: 5 },
+      story: { nome: 'Story (missão dos 7 dias)', pontos: 0 }
+    };
+    var SUGESTAO = { post: 'carrossel', reels: 'reels_treino', story: 'story' };
+    var DIAS_MISSAO = 7;
     var STATUS = { aprovado: 'Aprovado', recusado: 'Recusado', pendente: 'Em análise' };
     var estado = { inicio: '2026-10-16', fim: '2026-11-11', hoje: '' };
 
@@ -286,6 +298,20 @@
       if (atual > ultimo) html += '<option value="' + atual + '" selected>' + dataCurta(atual) + '</option>';
       return html;
     }
+    function opcoesCategoria(atual) {
+      return Object.keys(CATEGORIAS).map(function (k) {
+        var c = CATEGORIAS[k];
+        return '<option value="' + k + '"' + (k === atual ? ' selected' : '') + '>' + esc(c.nome) + (c.pontos ? ' (' + c.pontos + ' pts)' : '') + '</option>';
+      }).join('');
+    }
+    function nomeCategoria(p) {
+      var c = CATEGORIAS[p.categoria];
+      return c ? ' · ' + c.nome + (c.pontos ? ' (' + p.pontos + ' pts)' : '') : '';
+    }
+    function resumoPessoa(p) {
+      return p.conteudos + (p.conteudos === 1 ? ' conteúdo' : ' conteúdos') + ', ' + (p.extras > 0 ? '+' : '') + p.extras + ' extras, stories ' +
+        (p.sequencia || 0) + '/' + DIAS_MISSAO + ' seguidos' + (p.pendentes ? ', ' + p.pendentes + ' em análise' : '') + (p.bloqueada ? ', fora do ranking' : '');
+    }
     function botoesMotivo() {
       return MOTIVOS.map(function (m) { return '<button class="botao botao--claro" type="button" data-motivo="' + esc(m) + '">' + esc(m) + '</button>'; }).join('') +
         '<button class="botao botao--claro" type="button" data-motivo="">Cancelar</button>';
@@ -303,12 +329,13 @@
       return '<article class="post' + (story ? ' post--story' : '') + '" data-id="' + p.id + '">' +
         '<div class="post__topo"><input type="checkbox" class="marca" aria-label="Marcar @' + esc(p.arroba) + '">' +
           '<div class="post__quem"><a href="https://www.instagram.com/' + esc(p.arroba) + '/" target="_blank" rel="noopener">@' + esc(p.arroba) + '</a>' +
-          '<small>' + p.pontos + ' pontos, ' + p.dias + (p.dias === 1 ? ' dia' : ' dias') + ' com post</small></div>' +
+          '<small>' + p.pontos + ' pontos, ' + p.conteudos + (p.conteudos === 1 ? ' conteúdo' : ' conteúdos') + '</small></div>' +
           '<span class="chip' + (story ? ' chip--story' : '') + '">' + (NOMES[p.tipo] || 'Post') + '</span></div>' +
-        '<div class="post__meio"><label>Conta no dia <select class="dia" aria-label="Dia que o post conta">' + opcoesDias(p.dia) + '</select></label>' +
+        '<div class="post__meio"><label class="post__categoria">Vale como <select class="categoria" aria-label="Categoria do post">' + opcoesCategoria(p.sugestao) + '</select></label>' +
+          '<label>Conta no dia <select class="dia" aria-label="Dia que o post conta">' + opcoesDias(p.dia) + '</select></label>' +
           '<span>Mandou ' + hora(p.enviado_em) + '</span></div>' +
         (story ? '<p class="post__aviso">' + (velho ? 'Story mandado há mais de 20 horas: pode já ter sumido.' : 'Story some em 24 horas: confere logo.') + '</p>' : '') +
-        (p.dia_ja_conta ? '<p class="post__aviso">Esse dia já conta ponto pra ela. Aprovar só põe no mural.</p>' : '') +
+        (story && p.story_no_dia ? '<p class="post__aviso">Ela já tem story aprovado nesse dia: esse não muda a missão, só entra no mural.</p>' : '') +
         '<div class="post__acoes"><a class="botao botao--claro" href="' + esc(p.link) + '" target="_blank" rel="noopener">Abrir ' + icone('i-abrir') + '</a>' +
           '<button class="botao botao--recusar recusar" type="button" aria-expanded="false">Recusar</button>' +
           '<button class="botao botao--verde aprovar" type="button">Aprovar</button></div>' +
@@ -320,6 +347,7 @@
       var caixa = $('#lista-pendentes');
       return api('pendentes').then(function (r) {
         estado.hoje = r.hoje; estado.inicio = r.inicio; estado.fim = r.fim;
+        if (r.categorias) CATEGORIAS = r.categorias;
         atualizarResumo(r.resumo);
         caixa.innerHTML = r.posts.length ? r.posts.map(cartaoPendente).join('') : '<p class="vazio">Nada para aprovar agora.</p>';
         $('#marcar-todos').checked = false;
@@ -382,7 +410,8 @@
       var cartao = b.closest('.post');
       var id = Number(cartao.getAttribute('data-id'));
       b.disabled = true;
-      revisar([id], 'aprovar', { dia: $('.dia', cartao).value }).then(function () { avisar('Aprovado'); tirarCartoes([id]); })
+      var categoria = $('.categoria', cartao).value;
+      revisar([id], 'aprovar', { dia: $('.dia', cartao).value, categoria: categoria }).then(function () { avisar('Aprovado: ' + CATEGORIAS[categoria].nome); tirarCartoes([id]); })
         .catch(function (err) { avisar(err.message); b.disabled = false; });
     });
     $('#marcar-todos').addEventListener('change', function (e) {
@@ -392,13 +421,14 @@
     $('#aprovar-marcados').addEventListener('click', function () {
       var cartoes = $$('#lista-pendentes .marca:checked').map(function (c) { return c.closest('.post'); });
       if (!cartoes.length) return;
-      if (!confirm('Aprovar ' + cartoes.length + (cartoes.length === 1 ? ' post?' : ' posts?') + ' Confere se abriu cada um antes.')) return;
-      // cada post vai com o dia escolhido no cartão: agrupa por dia
-      var porDia = {};
-      cartoes.forEach(function (c) { var d = $('.dia', c).value; (porDia[d] = porDia[d] || []).push(Number(c.getAttribute('data-id'))); });
+      if (!confirm('Aprovar ' + cartoes.length + (cartoes.length === 1 ? ' post?' : ' posts?') + ' Confere se abriu cada um e se a categoria está certa.')) return;
+      // cada post vai com o dia e a categoria escolhidos no cartão: agrupa pelos dois
+      var grupos = {};
+      cartoes.forEach(function (c) { var g = $('.dia', c).value + '|' + $('.categoria', c).value; (grupos[g] = grupos[g] || []).push(Number(c.getAttribute('data-id'))); });
       var botao = $('#aprovar-marcados'); botao.disabled = true;
-      var fila = Object.keys(porDia).reduce(function (p, d) {
-        return p.then(function () { return revisar(porDia[d], 'aprovar', { dia: d }).then(function () { tirarCartoes(porDia[d]); }); });
+      var fila = Object.keys(grupos).reduce(function (p, g) {
+        var partes = g.split('|');
+        return p.then(function () { return revisar(grupos[g], 'aprovar', { dia: partes[0], categoria: partes[1] }).then(function () { tirarCartoes(grupos[g]); }); });
       }, Promise.resolve());
       fila.then(function () { avisar(cartoes.length + (cartoes.length === 1 ? ' aprovado' : ' aprovados')); })
         .catch(function (err) { avisar(err.message); carregarPendentes(); });
@@ -410,8 +440,8 @@
     function linhaPessoa(p, pos) {
       return '<li class="pessoa' + (p.bloqueada ? ' pessoa--bloqueada' : '') + '" data-arroba="' + esc(p.arroba) + '">' +
         '<button type="button" aria-expanded="false"><span class="pessoa__pos">' + (p.bloqueada ? '–' : (p.pontos > 0 ? pos + 'º' : '–')) + '</span>' +
-        '<span class="pessoa__nome">@' + esc(p.arroba) + (p.todo_dia ? ' <span class="fogo" title="Postou todos os dias até agora">' + icone('i-fogo') + '</span>' : '') +
-        '<small>' + p.dias + (p.dias === 1 ? ' dia' : ' dias') + ', ' + (p.extras > 0 ? '+' : '') + p.extras + ' extras' + (p.pendentes ? ', ' + p.pendentes + ' em análise' : '') + (p.bloqueada ? ', fora do ranking' : '') + '</small></span>' +
+        '<span class="pessoa__nome">@' + esc(p.arroba) + (p.missao ? ' <span class="fogo" title="Cumpriu a missão dos 7 dias de stories">' + icone('i-fogo') + '</span>' : '') +
+        '<small>' + esc(resumoPessoa(p)) + '</small></span>' +
         '<span class="pessoa__pts"><b>' + p.pontos + '</b>pontos</span></button>' +
         '<div class="detalhe" hidden></div></li>';
     }
@@ -430,13 +460,17 @@
     $('#mais-participantes').addEventListener('click', function () { paginaPart++; carregarParticipantes(false); });
 
     function detalheHtml(d) {
+      if (d.categorias) CATEGORIAS = d.categorias;
+      if (d.dias_missao) DIAS_MISSAO = d.dias_missao;
       var posts = d.posts.map(function (p) {
         return '<div class="item" data-id="' + p.id + '"><span class="chip chip--' + p.status + '">' + STATUS[p.status] + '</span>' +
-          '<span>' + (NOMES[p.tipo] || 'Post') + ' de ' + dataCurta(p.dia) + '</span>' +
+          '<span>' + (NOMES[p.tipo] || 'Post') + ' de ' + dataCurta(p.dia) + (p.status === 'aprovado' ? esc(nomeCategoria(p)) : '') + '</span>' +
           '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">abrir</a>' +
           (p.motivo ? '<small>(' + esc(p.motivo) + ')</small>' : '') +
           '<span class="acoes">' +
-            (p.status !== 'aprovado' ? '<button class="botao botao--verde botao--pequeno" data-acao="aprovar">Aprovar</button>' : '') +
+            '<select class="categoria" aria-label="Categoria do post">' + opcoesCategoria(p.categoria || SUGESTAO[p.tipo]) + '</select>' +
+            (p.status === 'aprovado' ? '<button class="botao botao--claro botao--pequeno" data-acao="aprovar">Trocar categoria</button>'
+              : '<button class="botao botao--verde botao--pequeno" data-acao="aprovar">Aprovar</button>') +
             (p.status !== 'pendente' ? '<button class="botao botao--claro botao--pequeno" data-acao="pendente">Voltar pra análise</button>' : '') +
             (p.status !== 'recusado' ? '<button class="botao botao--claro botao--pequeno" data-acao="recusar">Recusar</button>' : '') +
           '</span></div>';
@@ -445,11 +479,12 @@
         return '<div class="item"><b>' + (x.pontos > 0 ? '+' : '') + x.pontos + '</b><span>' + esc(x.motivo) + '</span><small>' + esc(x.por) + ', ' + hora(x.criado_em) + '</small>' +
           '<span class="acoes"><button class="botao botao--claro botao--pequeno" data-desfazer="' + x.id + '">Desfazer</button></span></div>';
       }).join('');
-      return '<p>' + (d.posicao ? d.posicao + 'º lugar, ' : '') + d.pontos + ' pontos: ' + d.dias + ' dias com post + ' + d.extras + ' extras.' +
-          (d.todo_dia ? ' <span class="fogo">' + icone('i-fogo') + ' Postou todos os dias até agora.</span>' : '') + '</p>' +
+      return '<p>' + (d.posicao ? d.posicao + 'º lugar, ' : '') + d.pontos + ' pontos: ' + (d.pontos - d.extras) + ' dos conteúdos aprovados (' + d.conteudos + ') + ' + d.extras + ' extras.</p>' +
+        '<p>Stories aprovados em ' + d.stories + (d.stories === 1 ? ' dia' : ' dias') + '. Maior sequência: ' + d.sequencia + ' de ' + d.dias_missao + ' dias seguidos.' +
+          (d.missao ? ' <span class="fogo">' + icone('i-fogo') + ' Missão cumprida: o brinde é dela.</span>' : '') + '</p>' +
         '<h3>Dar pontos extras</h3>' +
-        '<form class="extras-form"><select class="escolha" name="pontos" aria-label="Pontos"><option>1</option><option>2</option><option>3</option><option>5</option><option>-1</option><option>-2</option><option>-5</option></select>' +
-          '<select class="escolha" name="motivo" aria-label="Motivo"><option>Comentou</option><option>Compartilhou</option><option>Chamou as amigas</option><option>Outro</option></select>' +
+        '<form class="extras-form"><select class="escolha" name="pontos" aria-label="Pontos"><option>10</option><option>5</option><option>3</option><option>1</option><option>-1</option><option>-5</option><option>-10</option></select>' +
+          '<select class="escolha" name="motivo" aria-label="Motivo"><option>Vídeo Além do Shape</option><option>Correção</option><option>Outro</option></select>' +
           '<button class="botao botao--pequeno" type="submit">Dar pontos</button></form>' +
         (extras ? '<h3>Pontos extras dados</h3><div>' + extras + '</div>' : '') +
         '<h3>Posts</h3><div>' + posts + '</div>' +
@@ -466,7 +501,7 @@
     function trocarResumoLinha(li, d) {
       var pos = $('.pessoa__pos', li); var pts = $('.pessoa__pts b', li);
       pts.textContent = d.pontos;
-      $('.pessoa__nome small', li).textContent = d.dias + (d.dias === 1 ? ' dia' : ' dias') + ', ' + (d.extras > 0 ? '+' : '') + d.extras + ' extras' + (d.pendentes ? ', ' + d.pendentes + ' em análise' : '') + (d.bloqueada ? ', fora do ranking' : '');
+      $('.pessoa__nome small', li).textContent = resumoPessoa(d);
       pos.textContent = d.bloqueada || !d.posicao ? '–' : d.posicao + 'º';
     }
     $('#lista-participantes').addEventListener('click', function (e) {
@@ -483,6 +518,7 @@
           if (!m) return;
           extra = { motivo: m };
         }
+        if (tipo === 'aprovar') extra = { categoria: $('.categoria', item).value };
         acao.disabled = true;
         return revisar([Number(item.getAttribute('data-id'))], tipo, extra).then(function () { avisar('Feito'); return abrirDetalhe(li, true); })
           .catch(function (err) { avisar(err.message); acao.disabled = false; });
@@ -504,6 +540,10 @@
         }).catch(function (err) { avisar(err.message); });
       }
     });
+    // o vídeo do Além do Shape vale 10: escolher o motivo já acerta os pontos
+    $('#lista-participantes').addEventListener('change', function (e) {
+      if (e.target.name === 'motivo' && e.target.value === 'Vídeo Além do Shape') e.target.form.pontos.value = '10';
+    });
     $('#lista-participantes').addEventListener('submit', function (e) {
       if (!e.target.classList.contains('extras-form')) return;
       e.preventDefault();
@@ -522,7 +562,7 @@
     var paginaPosts = 0;
     function linhaPost(p) {
       return '<div class="post" data-id="' + p.id + '"><div class="post__topo"><span></span><div class="post__quem"><a href="https://www.instagram.com/' + esc(p.arroba) + '/" target="_blank" rel="noopener">@' + esc(p.arroba) + '</a>' +
-        '<small>' + (NOMES[p.tipo] || 'Post') + ' de ' + dataCurta(p.dia) + ', ' + STATUS[p.status].toLowerCase() + (p.revisado_por ? ' por ' + esc(p.revisado_por) : '') + (p.motivo ? ' (' + esc(p.motivo) + ')' : '') + '</small></div>' +
+        '<small>' + (NOMES[p.tipo] || 'Post') + ' de ' + dataCurta(p.dia) + (p.status === 'aprovado' ? esc(nomeCategoria(p)) : '') + ', ' + STATUS[p.status].toLowerCase() + (p.revisado_por ? ' por ' + esc(p.revisado_por) : '') + (p.motivo ? ' (' + esc(p.motivo) + ')' : '') + '</small></div>' +
         '<span class="chip chip--' + p.status + '">' + STATUS[p.status] + '</span></div>' +
         '<div class="post__acoes" style="grid-template-columns: 1fr 1fr"><a class="botao botao--claro" href="' + esc(p.link) + '" target="_blank" rel="noopener">Abrir ' + icone('i-abrir') + '</a>' +
         '<button class="botao botao--claro voltar" type="button">Voltar pra análise</button></div></div>';
