@@ -568,7 +568,7 @@
   <div class="wrap enviar__grade">
     <div class="enviar__texto revela">
       <h2 id="titulo-enviar">Manda o link do seu post</h2>
-      <p>Seu perfil precisa estar aberto pra equipe conferir.</p>
+      <p>Vale link do Instagram e do TikTok. Seu perfil precisa estar aberto pra equipe conferir.</p>
     </div>
 
     <form class="cartao form revela" id="form-post" novalidate style="--d:1">
@@ -580,7 +580,7 @@
       <div class="campo">
         <input id="link" name="link" type="url" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder=" " required aria-describedby="ajuda-link erro-link">
         <label for="link">Link do post</label>
-        <span class="ajuda" id="ajuda-link">No Instagram, toca nos três pontinhos e em Copiar link.</span>
+        <span class="ajuda" id="ajuda-link">No Instagram, toca nos três pontinhos e em Copiar link. No TikTok, em Compartilhar e Copiar link.</span>
         <span class="erro" id="erro-link" aria-live="polite"></span>
       </div>
       <fieldset class="quando" aria-describedby="erro-quando">
@@ -885,7 +885,7 @@
         var a = limparArroba(arroba.value);
         if (!a) return mostrarErro('arroba', 'Escreve o seu @ do Instagram.');
         if (!/^[a-z0-9._]{1,30}$/.test(a)) return mostrarErro('arroba', 'Confere o seu @. Só vale letra, número, ponto e _.');
-        if (!/instagr(am\.com|\.am)\//i.test(link.value)) return mostrarErro('link', 'Cola aqui o link de um post, reels ou story do Instagram.');
+        if (!/instagr(am\.com|\.am)\/|tiktok\.com\//i.test(link.value)) return mostrarErro('link', 'Cola aqui o link de um post, reels ou story do Instagram, ou de um vídeo do TikTok.');
         var quando = (form.querySelector('input[name="quando"]:checked') || {}).value || 'hoje';
         botao.disabled = true;
         textoBotao.textContent = 'Mandando…';
@@ -917,13 +917,13 @@
       var grade = $('#mural-grade');
       var mais = $('#mural-mais');
       var proximo = null;
-      var NOMES = { post: 'Post', reels: 'Reels', story: 'Story' };
+      var NOMES = { post: 'Post', reels: 'Reels', story: 'Story', tiktok: 'TikTok' };
       var contador = 0;
       function tile(p) {
         return '<li class="tile tile--' + (contador++ % 5) + '"><a href="' + esc(p.l) + '" target="_blank" rel="noopener">' +
           '<span class="tile__topo"><span class="tile__tipo">' + (NOMES[p.t] || 'Post') + '</span><span>' + dataCurta(p.d) + '</span></span>' +
           '<strong class="tile__nome">@' + esc(p.a) + '</strong>' +
-          '<span class="tile__ver">Ver no Instagram' + icone('i-abrir') + '</span></a></li>';
+          '<span class="tile__ver">Ver no ' + (p.t === 'tiktok' ? 'TikTok' : 'Instagram') + icone('i-abrir') + '</span></a></li>';
       }
       function carregar(antes) {
         mais.disabled = true;

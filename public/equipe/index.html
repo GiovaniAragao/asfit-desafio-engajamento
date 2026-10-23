@@ -221,7 +221,7 @@
 <script>
   (function () {
     var MOTIVOS = ['Perfil fechado', 'Não marcou a ASFIT', 'Link não abre', 'Post repetido', 'Não é do desafio', 'Outro motivo'];
-    var NOMES = { post: 'Post', reels: 'Reels', story: 'Story' };
+    var NOMES = { post: 'Post', reels: 'Reels', story: 'Story', tiktok: 'TikTok' };
     // Mesmas categorias da API (ela manda as dela junto com a fila e com o detalhe de cada participante)
     var CATEGORIAS = {
       carrossel: { nome: 'Carrossel em collab de antes e depois', pontos: 10 },
@@ -323,6 +323,12 @@
     }
 
     // ===== Para aprovar =====
+    // O perfil do TikTok pode não ser o @ do Instagram: o aviso mostra qual é, para a equipe conferir se é ela
+    function avisoTiktok(link) {
+      var m = String(link).match(/tiktok\.com\/@([^\/]+)\//i);
+      return m ? 'Vídeo do TikTok de @' + esc(m[1]) + ': confere se é ela.' : 'Vídeo do TikTok: confere no vídeo se é ela.';
+    }
+
     function cartaoPendente(p) {
       var story = p.tipo === 'story';
       var velho = story && Date.now() - p.enviado_em > 20 * 3600000;
@@ -336,6 +342,7 @@
           '<span>Mandou ' + hora(p.enviado_em) + '</span></div>' +
         (story ? '<p class="post__aviso">' + (velho ? 'Story mandado há mais de 20 horas: pode já ter sumido.' : 'Story some em 24 horas: confere logo.') + '</p>' : '') +
         (story && p.story_no_dia ? '<p class="post__aviso">Ela já tem story aprovado nesse dia: esse não muda a missão, só entra no mural.</p>' : '') +
+        (p.tipo === 'tiktok' ? '<p class="post__aviso">' + avisoTiktok(p.link) + '</p>' : '') +
         '<div class="post__acoes"><a class="botao botao--claro" href="' + esc(p.link) + '" target="_blank" rel="noopener">Abrir ' + icone('i-abrir') + '</a>' +
           '<button class="botao botao--recusar recusar" type="button" aria-expanded="false">Recusar</button>' +
           '<button class="botao botao--verde aprovar" type="button">Aprovar</button></div>' +

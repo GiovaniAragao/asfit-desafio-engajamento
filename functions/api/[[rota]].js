@@ -26,7 +26,7 @@ const CATEGORIAS = {
   reels_autocuidado: { nome: 'Reels de autocuidado', pontos: 5 },
   story: { nome: 'Story (missão dos 7 dias)', pontos: 0 },
 };
-const SUGESTAO = { post: 'carrossel', reels: 'reels_treino', story: 'story' }; // o que já vem marcado no painel
+const SUGESTAO = { post: 'carrossel', reels: 'reels_treino', story: 'story', tiktok: 'reels_treino' }; // o que já vem marcado no painel
 const DIAS_MISSAO = 7;                    // stories em dias seguidos para ganhar o brinde
 
 const enc = new TextEncoder();
@@ -98,6 +98,50 @@ function lerLink(valor) {
   if (!['p', 'reel', 'reels', 'tv'].includes(tipo) || !/^[A-Za-z0-9_-]{5,64}$/.test(codigo || '')) return null;
   const reels = tipo === 'reel' || tipo === 'reels';
   return { tipo: reels ? 'reels' : 'post', dono, link: `https://www.instagram.com/${reels ? 'reel' : 'p'}/${codigo}/` };
+}
+
+// TikTok (23/10/2026): vídeo e foto (tiktok.com/@perfil/video/ID ou /photo/ID) e os links curtos do "Compartilhar"
+// (vm.tiktok.com, vt.tiktok.com e tiktok.com/t/). O perfil do TikTok não precisa ser o @ do Instagram: a equipe confere.
+function lerTiktok(valor) {
+  let s = String(valor || '').trim();
+  const achou = s.match(/(?:https?:\/\/)?(?:[a-z]+\.)?tiktok\.com\/[^\s]+/i);
+  if (!achou) return null;
+  s = achou[0];
+  if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+  let u;
+  try { u = new URL(s); } catch { return null; }
+  const host = u.hostname.toLowerCase();
+  const partes = u.pathname.split('/').filter(Boolean);
+  if ((host === 'vm.tiktok.com' || host === 'vt.tiktok.com') && /^[A-Za-z0-9]{5,20}$/.test(partes[0] || '')) {
+    return { tipo: 'tiktok', dono: null, link: `https://${host}/${partes[0]}/`, curto: true };
+  }
+  if (partes[0] === 't' && /^[A-Za-z0-9]{5,20}$/.test(partes[1] || '')) {
+    return { tipo: 'tiktok', dono: null, link: `https://www.tiktok.com/t/${partes[1]}/`, curto: true };
+  }
+  // o link curto às vezes leva a tiktok.com/@/video/ID, com o perfil vazio
+  if (/^@[A-Za-z0-9._]{0,40}$/.test(partes[0] || '') && ['video', 'photo'].includes(partes[1]) && /^\d{8,25}$/.test(partes[2] || '')) {
+    return { tipo: 'tiktok', dono: null, id: partes[2], link: `https://www.tiktok.com/${partes[0].toLowerCase()}/${partes[1]}/${partes[2]}` };
+  }
+  const antigo = u.pathname.match(/^\/v\/(\d{8,25})(?:\.html)?$/); // m.tiktok.com/v/ID.html, link antigo do celular
+  if (antigo) return { tipo: 'tiktok', dono: null, id: antigo[1], link: `https://m.tiktok.com/v/${antigo[1]}.html` };
+  return null;
+}
+
+// Abre o link curto do TikTok para achar o vídeo. Link curto que não existe leva para a página inicial do TikTok.
+async function resolverTiktok(link) {
+  try {
+    const r = await fetch(link, {
+      redirect: 'manual',
+      headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' },
+      signal: AbortSignal.timeout(3000),
+    });
+    const destino = r.headers.get('location');
+    if (!destino) return null;
+    const lido = lerTiktok(new URL(destino, link).href);
+    if (lido && !lido.curto) return lido;
+    return { invalido: true };
+  } catch {}
+  return null; // não deu para abrir agora: fica o link curto, e a equipe confere
 }
 
 async function resolverCompartilhado(link) {
@@ -296,9 +340,14 @@ async function enviar(request, env) {
 
   const arroba = limparArroba(corpo.arroba);
   if (!arroba) return erro('Confere o seu @. Só vale letra, número, ponto e _.', 400, { campo: 'arroba' });
-  let lido = lerLink(corpo.link);
-  if (!lido) return erro('Cola aqui o link de um post, reels ou story do Instagram.', 400, { campo: 'link' });
+  let lido = lerTiktok(corpo.link) || lerLink(corpo.link);
+  if (!lido) return erro('Cola aqui o link de um post, reels ou story do Instagram, ou de um vídeo do TikTok.', 400, { campo: 'link' });
   if (lido.compartilhado) lido = (await resolverCompartilhado(lido.link)) || lido;
+  if (lido.curto) {
+    const aberto = await resolverTiktok(lido.link);
+    if (aberto && aberto.invalido) return erro('Esse link do TikTok não abre. Copia de novo em Compartilhar e Copiar link.', 400, { campo: 'link' });
+    if (aberto) lido = aberto;
+  }
   if (lido.dono && lido.dono !== arroba) {
     return erro(`Esse ${lido.tipo === 'story' ? 'story' : 'post'} é do @${lido.dono}. Manda um link do seu perfil.`, 400, { campo: 'link' });
   }
@@ -314,7 +363,10 @@ async function enviar(request, env) {
   const p = await env.DB.prepare('SELECT id, bloqueada FROM participantes WHERE arroba = ?').bind(arroba).first();
   if (p.bloqueada) return erro('Esse perfil não está participando do desafio.', 403, { campo: 'arroba' });
 
-  const repetido = await env.DB.prepare('SELECT participante_id FROM posts WHERE link = ?').bind(lido.link).first();
+  // TikTok: o mesmo vídeo pode chegar com e sem o perfil no link, então compara pelo número do vídeo
+  const repetido = lido.id
+    ? await env.DB.prepare("SELECT participante_id FROM posts WHERE link = ?1 OR (tipo = 'tiktok' AND link LIKE ?2)").bind(lido.link, `%/${lido.id}%`).first()
+    : await env.DB.prepare('SELECT participante_id FROM posts WHERE link = ?').bind(lido.link).first();
   if (repetido) {
     return repetido.participante_id === p.id
       ? erro('Esse post já tá aqui. Agora é só esperar a equipe aprovar.', 409, { campo: 'link' })
