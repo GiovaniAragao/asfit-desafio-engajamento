@@ -66,7 +66,7 @@ const RESERVADOS = ['p', 'reel', 'reels', 'stories', 'tv', 'explore', 'accounts'
 
 function limparArroba(valor) {
   let s = String(valor || '').trim();
-  const doLink = s.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+  const doLink = s.match(/(?:instagram\.com\/|tiktok\.com\/@)([A-Za-z0-9._]+)/i); // link do perfil colado no lugar do @
   if (doLink) s = doLink[1];
   s = s.replace(/^@+/, '').trim().toLowerCase();
   if (!/^[a-z0-9._]{1,30}$/.test(s) || /^\.|\.$|\.\./.test(s) || RESERVADOS.includes(s)) return null;
@@ -101,7 +101,7 @@ function lerLink(valor) {
 }
 
 // TikTok (23/10/2026): vídeo e foto (tiktok.com/@perfil/video/ID ou /photo/ID) e os links curtos do "Compartilhar"
-// (vm.tiktok.com, vt.tiktok.com e tiktok.com/t/). O perfil do TikTok não precisa ser o @ do Instagram: a equipe confere.
+// (vm.tiktok.com, vt.tiktok.com e tiktok.com/t/).
 function lerTiktok(valor) {
   let s = String(valor || '').trim();
   const achou = s.match(/(?:https?:\/\/)?(?:[a-z]+\.)?tiktok\.com\/[^\s]+/i);
@@ -348,9 +348,8 @@ async function enviar(request, env) {
     if (aberto && aberto.invalido) return erro('Esse link do TikTok não abre. Copia de novo em Compartilhar e Copiar link.', 400, { campo: 'link' });
     if (aberto) lido = aberto;
   }
-  if (lido.dono && lido.dono !== arroba) {
-    return erro(`Esse ${lido.tipo === 'story' ? 'story' : 'post'} é do @${lido.dono}. Manda um link do seu perfil.`, 400, { campo: 'link' });
-  }
+  // O @ dela pode ser do Instagram ou do TikTok (23/10/2026), então link de outro perfil não é recusado:
+  // o painel mostra o perfil do link e a equipe confere se é ela.
   const dia = corpo.quando === 'ontem' ? somarDias(hoje, -1) : hoje;
   if (dia < INICIO) return erro('O desafio começou hoje, então marca “Hoje”.', 400, { campo: 'quando' });
   if (dia > FIM) return erro('O desafio acabou dia 11/11. Só dá pra mandar o post de ontem.', 400, { campo: 'quando' });
@@ -525,8 +524,8 @@ async function rankingCsv(env) {
   const r = await env.DB.prepare(`SELECT arroba, pontos, conteudos, dias, extras, dias_lista FROM participantes
     WHERE bloqueada = 0 AND (pontos > 0 OR dias > 0) ORDER BY pontos DESC, primeiro`).all();
   const hoje = diaBrasilia();
-  const linhas = [['posição', 'arroba', 'pontos', 'conteúdos aprovados', 'pontos extras', 'dias com story', 'maior sequência de stories', 'missão dos 7 dias', 'perfil'].join(';')];
-  r.results.forEach((p, i) => linhas.push([p.pontos > 0 ? i + 1 : '-', '@' + p.arroba, p.pontos, p.conteudos, p.extras, p.dias, sequencia(p.dias_lista), missao(p.dias_lista) ? 'sim' : 'não', 'https://www.instagram.com/' + p.arroba + '/'].join(';')));
+  const linhas = [['posição', 'arroba', 'pontos', 'conteúdos aprovados', 'pontos extras', 'dias com story', 'maior sequência de stories', 'missão dos 7 dias'].join(';')];
+  r.results.forEach((p, i) => linhas.push([p.pontos > 0 ? i + 1 : '-', '@' + p.arroba, p.pontos, p.conteudos, p.extras, p.dias, sequencia(p.dias_lista), missao(p.dias_lista) ? 'sim' : 'não'].join(';')));
   return new Response('﻿' + linhas.join('\r\n'), {
     headers: {
       'content-type': 'text/csv; charset=utf-8',

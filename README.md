@@ -42,10 +42,10 @@ pontos" do `public/index.html`.
   linha só do banco.
 - Envio: aceita post, reels e story do Instagram (inclusive o link com o @ no caminho e o link curto do "Compartilhar")
   e, desde 23/10/2026, vídeo e foto do TikTok (inclusive os links curtos vm., vt. e /t/, que a API abre para achar o
-  vídeo; link curto que não existe é recusado na hora). O perfil do TikTok não precisa ser o @ do Instagram: o painel
-  mostra qual é para a equipe conferir. O mesmo vídeo com e sem o perfil no link conta como repetido. TikTok entra
-  sugerido como reels de treino ou dieta. Story
-  de outro perfil é recusado na hora. Limites: 40 envios por hora no mesmo IP e 8 links por @ no mesmo dia.
+  vídeo; link curto que não existe é recusado na hora). O @ da participante pode ser do Instagram ou do TikTok (23/10/2026), então link de outro perfil não é
+  recusado: o painel avisa quando o story ou o vídeo é de um perfil diferente do @ e a equipe confere. O mesmo vídeo com e
+  sem o perfil no link conta como repetido. TikTok entra sugerido como reels de treino ou dieta. O ranking mostra o @ sem
+  link e a planilha não tem a coluna do perfil, porque não dá para saber de qual rede é o @. Limites: 40 envios por hora no mesmo IP e 8 links por @ no mesmo dia.
 - Contas da equipe: segredo `ADMINS` (e-mail, nome, sal e hash PBKDF2, o mesmo esquema do calendário) e `SEGREDO`
   (assina o login; trocar desloga todo mundo). Senha nunca vai para arquivo. Para incluir alguém ou trocar senha,
   peça ao Claude: ele gera o JSON novo e roda `npx wrangler pages secret put ADMINS --project-name desafio-asfit`.

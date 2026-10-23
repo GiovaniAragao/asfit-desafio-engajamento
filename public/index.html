@@ -234,7 +234,7 @@
   .campo input:focus { outline: none; border-color: var(--vinho); box-shadow: 0 0 0 4px rgba(135, 58, 74, .14); }
   .campo input:focus + label, .campo input:not(:placeholder-shown) + label { transform: translateY(-10px) scale(.76); color: var(--vinho); }
   .campo input[aria-invalid="true"] { border-color: var(--erro); }
-  .ajuda { display: block; padding: 6px 0 0 6px; font-size: 13.5px; font-weight: 400; line-height: 1.4; color: var(--marrom-apoio); }
+  .ajuda { display: block; padding: 6px 0 0 6px; font-size: 13.5px; font-weight: 400; line-height: 1.4; color: var(--marrom-apoio); text-wrap: pretty; }
   .erro { display: block; padding: 4px 0 0 6px; font-size: 13.5px; font-weight: 500; line-height: 1.4; color: var(--erro); }
   .erro:empty { display: none; }
   /* Hoje / Ontem: dois botões de escolha lado a lado */
@@ -295,8 +295,7 @@
   .cor-3 { background: var(--marrom); color: var(--creme); }
   .cor-4 { background: var(--creme-apoio); color: var(--vinho); }
   .linha__nome { display: grid; gap: 1px; min-width: 0; }
-  .linha__nome a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16.5px; font-weight: 500; color: var(--marrom); text-decoration: none; }
-  .linha__nome a:hover { text-decoration: underline; }
+  .linha__arroba { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16.5px; font-weight: 500; color: var(--marrom); }
   .linha__nome small { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 400; color: var(--marrom-apoio); }
   .linha__nome small .icone { width: 15px; height: 15px; color: var(--terracota); }
   .linha__pts { text-align: right; font-size: 13px; font-weight: 400; color: var(--marrom-apoio); white-space: nowrap; }
@@ -573,8 +572,9 @@
 
     <form class="cartao form revela" id="form-post" novalidate style="--d:1">
       <div class="campo">
-        <input id="arroba" name="arroba" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder=" " required aria-describedby="erro-arroba">
-        <label for="arroba">Seu @ no Instagram</label>
+        <input id="arroba" name="arroba" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder=" " required aria-describedby="ajuda-arroba erro-arroba">
+        <label for="arroba">Seu @ no Instagram ou TikTok</label>
+        <span class="ajuda" id="ajuda-arroba">Usa sempre o mesmo @ pra somar seus pontos.</span>
         <span class="erro" id="erro-arroba" aria-live="polite"></span>
       </div>
       <div class="campo">
@@ -689,7 +689,7 @@
     function inicial(arroba) { var m = String(arroba).match(/[a-z0-9]/i); return m ? m[0] : '@'; }
     function limparArroba(v) {
       var s = String(v || '').trim();
-      var m = s.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+      var m = s.match(/(?:instagram\.com\/|tiktok\.com\/@)([A-Za-z0-9._]+)/i);
       if (m) s = m[1];
       return s.replace(/^@+/, '').trim().toLowerCase();
     }
@@ -754,7 +754,7 @@
       return '<li class="' + classes + '" style="--i:' + i + '">' +
         '<span class="linha__pos">' + p.p + 'º</span>' +
         '<span class="linha__avatar ' + corDe(p.a) + '" aria-hidden="true">' + esc(inicial(p.a)) + '</span>' +
-        '<span class="linha__nome"><a href="https://www.instagram.com/' + esc(p.a) + '/" target="_blank" rel="noopener">@' + esc(p.a) + '</a>' +
+        '<span class="linha__nome"><span class="linha__arroba">@' + esc(p.a) + '</span>' +
         '<small>' + esc(detalhe) + (p.m ? icone('i-fogo') + '<span class="sr-only">cumpriu a missão dos stories</span>' : '') + '</small></span>' +
         '<span class="linha__pts"><strong>' + p.pts + '</strong>' + (p.pts === 1 ? 'ponto' : 'pontos') + '</span>' +
         '</li>';
@@ -836,7 +836,7 @@
         e.preventDefault();
         var arroba = limparArroba(campo.value);
         erroBusca.textContent = '';
-        if (!arroba) { erroBusca.textContent = 'Escreve o seu @ do Instagram.'; campo.focus(); return; }
+        if (!arroba) { erroBusca.textContent = 'Escreve o seu @.'; campo.focus(); return; }
         var botao = form.querySelector('button');
         botao.disabled = true;
         api('/eu?arroba=' + encodeURIComponent(arroba)).then(function (eu) {
@@ -883,7 +883,7 @@
         e.preventDefault();
         limparErros();
         var a = limparArroba(arroba.value);
-        if (!a) return mostrarErro('arroba', 'Escreve o seu @ do Instagram.');
+        if (!a) return mostrarErro('arroba', 'Escreve o seu @.');
         if (!/^[a-z0-9._]{1,30}$/.test(a)) return mostrarErro('arroba', 'Confere o seu @. Só vale letra, número, ponto e _.');
         if (!/instagr(am\.com|\.am)\/|tiktok\.com\//i.test(link.value)) return mostrarErro('link', 'Cola aqui o link de um post, reels ou story do Instagram, ou de um vídeo do TikTok.');
         var quando = (form.querySelector('input[name="quando"]:checked') || {}).value || 'hoje';

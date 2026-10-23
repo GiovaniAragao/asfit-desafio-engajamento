@@ -81,7 +81,7 @@
   .post__topo { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 10px; }
   .post__topo input[type="checkbox"] { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--vinho); }
   .post__quem { min-width: 0; }
-  .post__quem a { font-weight: 600; font-size: 17px; text-decoration: none; overflow-wrap: anywhere; }
+  .post__quem strong { display: block; font-weight: 600; font-size: 17px; color: var(--vinho); overflow-wrap: anywhere; }
   .post__quem small { display: block; font-size: 13px; color: var(--marrom-apoio); }
   .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; background: var(--creme-apoio); color: var(--vinho); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
   .chip--story { background: var(--terracota); color: var(--creme); }
@@ -323,10 +323,13 @@
     }
 
     // ===== Para aprovar =====
-    // O perfil do TikTok pode não ser o @ do Instagram: o aviso mostra qual é, para a equipe conferir se é ela
-    function avisoTiktok(link) {
-      var m = String(link).match(/tiktok\.com\/@([^\/]+)\//i);
-      return m ? 'Vídeo do TikTok de @' + esc(m[1]) + ': confere se é ela.' : 'Vídeo do TikTok: confere no vídeo se é ela.';
+    // O @ dela pode ser do Instagram ou do TikTok: quando o link mostra outro perfil, o aviso pede para a equipe conferir
+    function avisoDono(p) {
+      var m = String(p.link).match(/tiktok\.com\/@([^\/]*)\//i) || String(p.link).match(/instagram\.com\/stories\/([^\/]+)\//i);
+      var dono = m ? m[1].toLowerCase() : '';
+      if (p.tipo === 'tiktok' && !dono) return 'Vídeo do TikTok: confere no vídeo se é ela.';
+      if (!dono || dono === p.arroba) return '';
+      return (p.tipo === 'tiktok' ? 'Vídeo do TikTok' : 'Story') + ' do @' + esc(dono) + ', diferente do @ dela: confere se é ela.';
     }
 
     function cartaoPendente(p) {
@@ -334,7 +337,7 @@
       var velho = story && Date.now() - p.enviado_em > 20 * 3600000;
       return '<article class="post' + (story ? ' post--story' : '') + '" data-id="' + p.id + '">' +
         '<div class="post__topo"><input type="checkbox" class="marca" aria-label="Marcar @' + esc(p.arroba) + '">' +
-          '<div class="post__quem"><a href="https://www.instagram.com/' + esc(p.arroba) + '/" target="_blank" rel="noopener">@' + esc(p.arroba) + '</a>' +
+          '<div class="post__quem"><strong>@' + esc(p.arroba) + '</strong>' +
           '<small>' + p.pontos + ' pontos, ' + p.conteudos + (p.conteudos === 1 ? ' conteúdo' : ' conteúdos') + '</small></div>' +
           '<span class="chip' + (story ? ' chip--story' : '') + '">' + (NOMES[p.tipo] || 'Post') + '</span></div>' +
         '<div class="post__meio"><label class="post__categoria">Vale como <select class="categoria" aria-label="Categoria do post">' + opcoesCategoria(p.sugestao) + '</select></label>' +
@@ -342,7 +345,7 @@
           '<span>Mandou ' + hora(p.enviado_em) + '</span></div>' +
         (story ? '<p class="post__aviso">' + (velho ? 'Story mandado há mais de 20 horas: pode já ter sumido.' : 'Story some em 24 horas: confere logo.') + '</p>' : '') +
         (story && p.story_no_dia ? '<p class="post__aviso">Ela já tem story aprovado nesse dia: esse não muda a missão, só entra no mural.</p>' : '') +
-        (p.tipo === 'tiktok' ? '<p class="post__aviso">' + avisoTiktok(p.link) + '</p>' : '') +
+        (avisoDono(p) ? '<p class="post__aviso">' + avisoDono(p) + '</p>' : '') +
         '<div class="post__acoes"><a class="botao botao--claro" href="' + esc(p.link) + '" target="_blank" rel="noopener">Abrir ' + icone('i-abrir') + '</a>' +
           '<button class="botao botao--recusar recusar" type="button" aria-expanded="false">Recusar</button>' +
           '<button class="botao botao--verde aprovar" type="button">Aprovar</button></div>' +
@@ -568,7 +571,7 @@
     // ===== Posts revisados =====
     var paginaPosts = 0;
     function linhaPost(p) {
-      return '<div class="post" data-id="' + p.id + '"><div class="post__topo"><span></span><div class="post__quem"><a href="https://www.instagram.com/' + esc(p.arroba) + '/" target="_blank" rel="noopener">@' + esc(p.arroba) + '</a>' +
+      return '<div class="post" data-id="' + p.id + '"><div class="post__topo"><span></span><div class="post__quem"><strong>@' + esc(p.arroba) + '</strong>' +
         '<small>' + (NOMES[p.tipo] || 'Post') + ' de ' + dataCurta(p.dia) + (p.status === 'aprovado' ? esc(nomeCategoria(p)) : '') + ', ' + STATUS[p.status].toLowerCase() + (p.revisado_por ? ' por ' + esc(p.revisado_por) : '') + (p.motivo ? ' (' + esc(p.motivo) + ')' : '') + '</small></div>' +
         '<span class="chip chip--' + p.status + '">' + STATUS[p.status] + '</span></div>' +
         '<div class="post__acoes" style="grid-template-columns: 1fr 1fr"><a class="botao botao--claro" href="' + esc(p.link) + '" target="_blank" rel="noopener">Abrir ' + icone('i-abrir') + '</a>' +
